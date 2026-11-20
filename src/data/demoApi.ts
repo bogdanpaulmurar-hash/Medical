@@ -15,7 +15,7 @@ import type {
  * MOD DEMO: totul rămâne în localStorage-ul acestui browser.
  * Toate datele sunt FICTIVE. Folosit doar pentru încercarea interfeței.
  */
-const KEY = 'medsched-demo-v1';
+const KEY = 'medsched-demo-v2';
 const SESSION_KEY = 'medsched-demo-session';
 
 interface DB {
@@ -78,12 +78,32 @@ function seed(): DB {
     a('D-1003', 'E.F.', 'p2', 'r3', at(10, 30), at(10, 50), 'u-att2', null, 'planned'),
     a('D-1004', 'G.H.', 'p1', 'r1', at(12, 0), at(12, 30), 'u-att2', null, 'cancelled'),
     a('D-1005', 'I.J.', 'p3', 'r1', at(9, 0, 1), at(10, 0, 1), 'u-att1', 'u-rec', 'planned'),
+    a('D-1006', 'K.L.', 'p2', 'r2', at(9, 15), at(9, 35), 'u-att2', null, 'in_progress'),
+    a('D-1007', 'M.N.', 'p1', 'r3', at(11, 30), at(12, 0), 'u-att1', null, 'planned'),
+    a('D-1008', 'O.P.', 'p3', 'r1', at(13, 0), at(14, 0), 'u-att2', 'u-rec', 'confirmed'),
+    a('D-1009', 'Q.R.', 'p1', 'r2', at(14, 30), at(15, 0), 'u-att1', null, 'planned'),
+    a('D-1010', 'S.T.', 'p2', 'r3', at(9, 0, 2), at(9, 20, 2), 'u-att2', null, 'planned'),
   ];
-  const audit: AuditEntry[] = appointments.map((ap, i) => ({
-    id: i + 1, table_name: 'appointments', record_id: ap.id, action: 'INSERT', changed_by: 'u-sch',
-    changed_by_email: 'programari@exemplu.test', changed_at: now, old_data: null,
+  appointments[0].notes = 'Control după 2 săptămâni';
+  const entry = (id: number, ap: Appointment, action: AuditEntry['action'], by: string, email: string, at: string, oldD: Appointment | null): AuditEntry => ({
+    id, table_name: 'appointments', record_id: ap.id, action, changed_by: by, changed_by_email: email,
+    changed_at: at, old_data: oldD as unknown as Record<string, unknown> | null,
     new_data: ap as unknown as Record<string, unknown>,
-  }));
+  });
+  const hoursAgo = (h: number) => new Date(Date.now() - h * 3600_000).toISOString();
+  const audit: AuditEntry[] = appointments.map((ap, i) =>
+    entry(i + 1, ap, 'INSERT', 'u-sch', 'programari@exemplu.test', hoursAgo(30 - i), null),
+  );
+  // Exemplu de istoric cu mai multe modificări pentru prima programare.
+  const first = appointments[0];
+  const v0 = { ...first, status: 'planned' as const, notes: null, updated_at: hoursAgo(30) };
+  const v1 = { ...first, status: 'confirmed' as const, notes: null, updated_at: hoursAgo(5) };
+  audit.push(entry(audit.length + 1, v1, 'UPDATE', 'u-att1', 'curant1@exemplu.test', hoursAgo(5), v0));
+  audit.push(entry(audit.length + 1, first, 'UPDATE', 'u-sch', 'programari@exemplu.test', hoursAgo(1), v1));
+  first.status = 'confirmed';
+  first.updated_by = 'u-sch';
+  first.updated_at = hoursAgo(1);
+  audit.reverse(); // cele mai noi primele
   return {
     profiles, cabinets, rooms, procedures, appointments, audit,
     settings: { clinic_name: 'Clinica Demo', email_enabled: true, sms_enabled: false },
