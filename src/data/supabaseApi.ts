@@ -64,7 +64,7 @@ export class SupabaseApi implements Api {
   async inviteUser(email: string, fullName: string, role: Profile['role']) {
     // Invitația necesită cheia service_role, deci rulează în Edge Function.
     const { error } = await this.sb.functions.invoke('invite-user', {
-      body: { email, full_name: fullName, role, redirect_to: window.location.origin },
+      body: { email, full_name: fullName, role, redirect_to: window.location.origin + window.location.pathname },
     });
     if (error) throw toApiError(error as Error);
   }

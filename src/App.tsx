@@ -78,7 +78,7 @@ function Shell() {
       )}
       <header className="topbar">
         <div className="brand">
-          <img src="/icon.svg" alt="" width={28} height={28} />
+          <img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" width={28} height={28} />
           <span>{t('appName')}</span>
           {settings.clinic_name && <span className="muted small clinic">{settings.clinic_name}</span>}
         </div>
