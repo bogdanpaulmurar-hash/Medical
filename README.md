@@ -102,6 +102,12 @@ Without `.env.local` the app starts in **demo mode**: pick a fake user; data sta
 
 ### 3. Frontend (găzduire statică gratuită) / Frontend (free static hosting)
 
+**Varianta GitHub Pages (inclusă în repo) / GitHub Pages option (included in repo):**
+Settings → Pages → *Source: GitHub Actions*. Workflow-ul `.github/workflows/pages.yml` construiește și publică automat la fiecare push pe `main`, la `https://<organizație>.github.io/<repo>/`. Variabilele `VITE_SUPABASE_URL` și `VITE_SUPABASE_ANON_KEY` se pun în Settings → Secrets and variables → Actions → **Variables**; fără ele aplicația pornește în mod demo. Adăugați adresa Pages în Supabase la pasul 1.5 (Site URL și Redirect URLs).
+Pages cere repo public (sau plan plătit); repo-ul nu conține date de pacienți.
+
+**Alternativ / Alternatively:**
+
 Orice găzduire statică merge. Exemplu **Netlify** (sau Cloudflare Pages / Vercel, identic):
 
 1. Conectați repo-ul GitHub. Build command: `npm run build`, publish directory: `dist`.

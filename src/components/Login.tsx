@@ -20,7 +20,7 @@ export function Login() {
     setBusy(true);
     setError(null);
     try {
-      await api.sendMagicLink(email.trim(), window.location.origin);
+      await api.sendMagicLink(email.trim(), window.location.origin + window.location.pathname);
       setSent(true);
     } catch {
       // Mesaj generic: nu dezvăluim dacă emailul există.
@@ -40,7 +40,7 @@ export function Login() {
             </button>
           ))}
         </div>
-        <img src="/icon.svg" alt="" width={56} height={56} />
+        <img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" width={56} height={56} />
         <h1 className="wordmark">Med<span>Slot</span></h1>
         <p className="muted">{t('tagline')}</p>
 
