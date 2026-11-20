@@ -149,6 +149,24 @@ export function startOfWeek(d: Date) {
   const dow = (x.getDay() + 6) % 7; // luni = 0
   return addDays(x, -dow);
 }
+export function startOfMonth(d: Date) {
+  return new Date(d.getFullYear(), d.getMonth(), 1);
+}
+export function addMonths(d: Date, n: number) {
+  return new Date(d.getFullYear(), d.getMonth() + n, 1);
+}
+export function sameDay(a: Date, b: Date) {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}
+export function fmtRange(from: Date, to: Date, view: 'day' | 'week' | 'month', lang: Lang) {
+  const l = locale(lang);
+  if (view === 'month') return from.toLocaleDateString(l, { month: 'long', year: 'numeric' });
+  if (view === 'day') return fmtDayHeading(from, lang);
+  const last = addDays(to, -1);
+  const a = from.toLocaleDateString(l, { day: 'numeric', month: 'short' });
+  const b = last.toLocaleDateString(l, { day: 'numeric', month: 'short', year: 'numeric' });
+  return `${a} – ${b}`;
+}
 export function toDateInput(d: Date) {
   const p = (n: number) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;

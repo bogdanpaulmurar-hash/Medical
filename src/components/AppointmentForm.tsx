@@ -3,20 +3,20 @@ import { ApiError, findConflicts } from '../data/api';
 import { addDays, api, fmtTime, startOfDay, toDateInput, toTimeInput, useApp } from '../state';
 import { statusLabels, type TKey } from '../i18n';
 import { STATUSES, type Appointment, type AppointmentInput, type Status } from '../types';
-import { AuditList } from './History';
 
 interface Props {
   appointment: Appointment | null;
   defaultDate: Date;
+  defaults?: { start: Date; roomId?: string };
   onClose: () => void;
-  onSaved: () => void;
+  onSaved: (saved: Appointment) => void;
 }
 
-export function AppointmentForm({ appointment, defaultDate, onClose, onSaved }: Props) {
+export function AppointmentForm({ appointment, defaultDate, defaults, onClose, onSaved }: Props) {
   const { t, prefs, procedures, rooms, cabinets, profiles, me } = useApp();
   const dialogRef = useRef<HTMLDialogElement>(null);
 
-  const initStart = appointment ? new Date(appointment.starts_at) : (() => {
+  const initStart = appointment ? new Date(appointment.starts_at) : defaults ? new Date(defaults.start) : (() => {
     const d = new Date(defaultDate);
     d.setHours(9, 0, 0, 0);
     return d;
@@ -32,7 +32,7 @@ export function AppointmentForm({ appointment, defaultDate, onClose, onSaved }: 
     diagnosis: appointment?.diagnosis ?? '',
     notes: appointment?.notes ?? '',
     procedure_id: appointment?.procedure_id ?? procedures.find((p) => p.active)?.id ?? '',
-    room_id: appointment?.room_id ?? rooms.find((r) => r.active)?.id ?? '',
+    room_id: appointment?.room_id ?? defaults?.roomId ?? rooms.find((r) => r.active)?.id ?? '',
     date: toDateInput(initStart),
     time: toTimeInput(initStart),
     duration: initDuration,
@@ -43,7 +43,6 @@ export function AppointmentForm({ appointment, defaultDate, onClose, onSaved }: 
   const [dayItems, setDayItems] = useState<Appointment[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => {
     dialogRef.current?.showModal();
@@ -87,8 +86,8 @@ export function AppointmentForm({ appointment, defaultDate, onClose, onSaved }: 
     setBusy(true);
     setError(null);
     try {
-      await api.saveAppointment(appointment?.id ?? null, input);
-      onSaved();
+      const saved = await api.saveAppointment(appointment?.id ?? null, input);
+      onSaved(saved);
     } catch (err) {
       const code = err instanceof ApiError ? err.code : 'other';
       setError(code === 'other' ? t('errorGeneric') : t(code as TKey));
@@ -267,11 +266,6 @@ export function AppointmentForm({ appointment, defaultDate, onClose, onSaved }: 
         )}
 
         <footer className="modal-foot">
-          {appointment && (
-            <button type="button" className="ghost" onClick={() => setShowHistory((s) => !s)}>
-              {t('history')}
-            </button>
-          )}
           <span className="push-right" />
           <button type="button" className="secondary" onClick={onClose}>
             {t('cancel')}
@@ -281,7 +275,6 @@ export function AppointmentForm({ appointment, defaultDate, onClose, onSaved }: 
           </button>
         </footer>
 
-        {appointment && showHistory && <AuditList recordId={appointment.id} />}
       </form>
     </dialog>
   );

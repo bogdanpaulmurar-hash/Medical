@@ -16,14 +16,14 @@ export function HistoryPage() {
   );
 }
 
-export function AuditList({ recordId }: { recordId?: string }) {
+export function AuditList({ recordId, refreshKey }: { recordId?: string; refreshKey?: string }) {
   const { t, prefs, profiles, rooms, cabinets, procedures } = useApp();
   const [entries, setEntries] = useState<AuditEntry[]>([]);
   const [limit, setLimit] = useState(100);
 
   useEffect(() => {
     void api.listAudit({ recordId, limit }).then(setEntries);
-  }, [recordId, limit]);
+  }, [recordId, limit, refreshKey]);
 
   const fmtValue = (field: string, v: unknown): string => {
     if (v === null || v === undefined || v === '') return '∅';
@@ -68,7 +68,8 @@ export function AuditList({ recordId }: { recordId?: string }) {
 
   return (
     <div className="audit">
-      <ul className="audit-list">
+      {recordId && entries.length === 0 && <p className="muted">{t('noHistory')}</p>}
+      <ul className={recordId ? 'audit-list timeline' : 'audit-list'}>
         {entries.map((e) => {
           const who = profiles.find((p) => p.id === e.changed_by)?.full_name || e.changed_by_email || t('system');
           return (
