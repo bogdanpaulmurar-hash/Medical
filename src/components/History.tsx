@@ -1,29 +1,71 @@
 import { useEffect, useState } from 'react';
 import { api, fmtDateTime, useApp } from '../state';
 import { fieldLabels, roleLabels, statusLabels, type TKey } from '../i18n';
+import type { AuditFilters } from '../data/api';
 import type { AuditEntry, Role, Status } from '../types';
 
 const HIDDEN = new Set(['id', 'created_at', 'updated_at', 'created_by', 'updated_by']);
 
 export function HistoryPage() {
-  const { t } = useApp();
+  const { t, profiles } = useApp();
+  const [userId, setUserId] = useState('');
+  const [action, setAction] = useState<'' | 'INSERT' | 'UPDATE' | 'DELETE'>('');
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
+  const filters: AuditFilters = {
+    userId: userId || undefined,
+    action: action || undefined,
+    from: from ? new Date(`${from}T00:00`).toISOString() : undefined,
+    to: to ? new Date(new Date(`${to}T00:00`).getTime() + 86400000).toISOString() : undefined,
+  };
   return (
     <section>
       <h1>{t('historyTitle')}</h1>
       <p className="muted">{t('historyIntro')}</p>
-      <AuditList />
+      <div className="card filters">
+        <div className="grid2 grid4">
+          <label>
+            {t('who')}
+            <select value={userId} onChange={(e) => setUserId(e.target.value)}>
+              <option value="">{t('anyUser')}</option>
+              {profiles.map((p) => (
+                <option key={p.id} value={p.id}>{p.full_name || p.email}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            {t('what')}
+            <select value={action} onChange={(e) => setAction(e.target.value as typeof action)}>
+              <option value="">{t('anyAction')}</option>
+              <option value="INSERT">{t('action_INSERT')}</option>
+              <option value="UPDATE">{t('action_UPDATE')}</option>
+              <option value="DELETE">{t('action_DELETE')}</option>
+            </select>
+          </label>
+          <label>
+            {t('fromDate')}
+            <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+          </label>
+          <label>
+            {t('toDate')}
+            <input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+          </label>
+        </div>
+      </div>
+      <AuditList filters={filters} />
     </section>
   );
 }
 
-export function AuditList({ recordId, refreshKey }: { recordId?: string; refreshKey?: string }) {
+export function AuditList({ recordId, refreshKey, filters }: { recordId?: string; refreshKey?: string; filters?: AuditFilters }) {
   const { t, prefs, profiles, rooms, cabinets, procedures } = useApp();
   const [entries, setEntries] = useState<AuditEntry[]>([]);
   const [limit, setLimit] = useState(100);
 
   useEffect(() => {
-    void api.listAudit({ recordId, limit }).then(setEntries);
-  }, [recordId, limit, refreshKey]);
+    void api.listAudit({ ...filters, recordId, limit }).then(setEntries);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recordId, limit, refreshKey, JSON.stringify(filters)]);
 
   const fmtValue = (field: string, v: unknown): string => {
     if (v === null || v === undefined || v === '') return '∅';
@@ -68,7 +110,7 @@ export function AuditList({ recordId, refreshKey }: { recordId?: string; refresh
 
   return (
     <div className="audit">
-      {recordId && entries.length === 0 && <p className="muted">{t('noHistory')}</p>}
+      {entries.length === 0 && <p className="muted">{t('noHistory')}</p>}
       <ul className={recordId ? 'audit-list timeline' : 'audit-list'}>
         {entries.map((e) => {
           const who = profiles.find((p) => p.id === e.changed_by)?.full_name || e.changed_by_email || t('system');

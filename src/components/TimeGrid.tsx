@@ -8,6 +8,7 @@ export interface GridCol {
   sub?: string;
   date: Date; // miezul nopții al zilei coloanei
   roomId?: string;
+  personId?: string;
   today: boolean;
   items: Appointment[];
 }
@@ -23,7 +24,7 @@ interface Props {
   cols: GridCol[];
   describe: (a: Appointment) => BlockInfo;
   showRoom: boolean;
-  onSlot: (start: Date, roomId?: string) => void;
+  onSlot: (start: Date, col: GridCol) => void;
   onOpen: (a: Appointment) => void;
 }
 
@@ -113,7 +114,7 @@ export function TimeGrid({ cols, describe, showRoom, onSlot, onOpen }: Props) {
     const snapped = Math.floor(mins / SNAP_MIN) * SNAP_MIN;
     const d = new Date(col.date);
     d.setHours(0, snapped, 0, 0);
-    onSlot(d, col.roomId);
+    onSlot(d, col);
   }
 
   const nowMin = now.getHours() * 60 + now.getMinutes();
