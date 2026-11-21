@@ -8,6 +8,7 @@ import type {
   Procedure,
   Profile,
   Room,
+  Status,
 } from '../types';
 import { NON_BLOCKING } from '../types';
 
@@ -16,6 +17,26 @@ import { NON_BLOCKING } from '../types';
  *  - SupabaseApi: baza de date reală (producție);
  *  - DemoApi: date fictive în localStorage, pentru încercare fără server.
  */
+export interface SearchFilters {
+  text?: string; // cod, inițiale sau nume
+  includeNotes?: boolean; // caută și în diagnostic și note
+  procedureId?: string;
+  roomId?: string;
+  doctorId?: string; // medic curant sau primitor
+  status?: Status | '';
+  from?: string; // ISO, inclusiv
+  to?: string; // ISO, exclusiv
+}
+
+export interface AuditFilters {
+  recordId?: string;
+  limit?: number;
+  userId?: string;
+  action?: 'INSERT' | 'UPDATE' | 'DELETE';
+  from?: string; // ISO, inclusiv
+  to?: string; // ISO, exclusiv
+}
+
 export interface Api {
   readonly mode: 'supabase' | 'demo';
 
@@ -48,7 +69,10 @@ export interface Api {
   onAppointmentsChange(cb: () => void): () => void;
 
   // Istoric
-  listAudit(opts: { recordId?: string; limit?: number }): Promise<AuditEntry[]>;
+  listAudit(opts: AuditFilters): Promise<AuditEntry[]>;
+
+  // Căutare în toate programările (cele mai noi primele)
+  searchAppointments(f: SearchFilters, offset: number, limit: number): Promise<{ rows: Appointment[]; total: number }>;
 }
 
 /** Eroare cu cod, ca UI-ul să poată afișa mesajul tradus. */
