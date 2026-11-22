@@ -6,6 +6,7 @@ import {
 } from '../data/vademecum';
 import { ScalesTab } from './Scales';
 import { ExamTab } from './Exam';
+import { BiletTab } from './Bilet';
 import { CATALOG_PROCEDURES } from '../data/catalog';
 
 /** Text cu **îngroșat** și rânduri noi, cum vine din ghiduri. */
@@ -17,7 +18,7 @@ function Rich({ text }: { text: string }) {
   );
 }
 
-type Tab = 'pat' | 'dev' | 'sc' | 'ex';
+type Tab = 'pat' | 'dev' | 'sc' | 'ex' | 'bi';
 
 export function GuidesPage() {
   const { t } = useApp();
@@ -66,9 +67,14 @@ export function GuidesPage() {
         <button role="tab" aria-selected={tab === 'ex'} className={tab === 'ex' ? 'chip on' : 'chip'} onClick={() => setTab('ex')}>
           {t('guidesExam')}
         </button>
+        <button role="tab" aria-selected={tab === 'bi'} className={tab === 'bi' ? 'chip on' : 'chip'} onClick={() => setTab('bi')}>
+          {t('guidesBilet')}
+        </button>
       </div>
       <p className="muted small">{t('guidesSource')}</p>
-      {tab === 'ex' ? (
+      {tab === 'bi' ? (
+        <BiletTab />
+      ) : tab === 'ex' ? (
         <ExamTab onPathology={openPathology} />
       ) : tab === 'sc' ? (
         <ScalesTab />

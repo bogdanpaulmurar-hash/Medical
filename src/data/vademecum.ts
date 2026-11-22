@@ -134,3 +134,9 @@ export interface ExamData {
   EX_PAT: Record<string, string>; EX_THR_REF: string;
 }
 export const loadExam = () => load<ExamData>('exam.json');
+
+export interface BiletData {
+  BI_LOCO: string[][]; BI_GEN: string[][]; BI_NEUF: string[][]; BI_NEU: string[][];
+  BI_REC: [string, string, boolean][]; BI_INV: string[][]; BI_LAS: string[][]; BI_PAT: string[][]; BI_GAP: string;
+}
+export const loadBilet = () => load<BiletData>('bilet.json');
