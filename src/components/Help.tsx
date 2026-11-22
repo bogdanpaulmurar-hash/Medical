@@ -17,6 +17,9 @@ export function Help() {
         </button>
       </div>
       {lang === 'ro' ? <HelpRo /> : <HelpEn />}
+      <p className="muted small version">
+        MedSlot · {lang === 'ro' ? 'Versiune' : 'Version'}: {__APP_VERSION__}
+      </p>
     </section>
   );
 }

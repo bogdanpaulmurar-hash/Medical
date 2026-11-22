@@ -71,6 +71,9 @@ export function Login() {
             {error && <p className="error">{error}</p>}
           </form>
         )}
+        <p className="muted small version">
+          {t('version')}: {__APP_VERSION__}
+        </p>
       </div>
     </main>
   );

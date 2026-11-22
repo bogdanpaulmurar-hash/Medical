@@ -442,3 +442,4 @@ table.occ td { padding: 0; border: 0; }
 .card-item.status-cancelled, .card-item.status-no_show { opacity: 0.6; }
 :root[data-theme='dark'] .card-item { --c: hsl(var(--h, 172) 60% 58%); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme='light']) .card-item { --c: hsl(var(--h, 172) 60% 58%); } }
+.version { margin-top: 1.5rem; text-align: center; }

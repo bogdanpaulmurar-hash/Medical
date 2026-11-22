@@ -34,6 +34,9 @@ export function SettingsPage() {
       <Procedures />
       <Users isAdmin={isAdmin} />
       <ClinicSettings isAdmin={isAdmin} />
+      <p className="muted small version">
+        MedSlot · {t('version')}: {__APP_VERSION__}
+      </p>
     </section>
   );
 }
