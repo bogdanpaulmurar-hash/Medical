@@ -3,8 +3,10 @@ import {
   addDays, addMonths, api, fmtDayHeading, fmtRange, fmtTime, sameDay, startOfDay, startOfMonth, startOfWeek,
   toDateInput, useApp,
 } from '../state';
-import { roleLabels, statusLabels } from '../i18n';
-import type { Appointment, Status } from '../types';
+import { roleLabels, statusLabels, type TKey } from '../i18n';
+import { ApiError } from '../data/api';
+import { changeStatus } from '../statusChange';
+import { STATUSES, type Appointment, type Status } from '../types';
 import { AppointmentDetail } from './AppointmentDetail';
 import { AppointmentForm } from './AppointmentForm';
 import { MonthGrid } from './MonthGrid';
@@ -52,6 +54,8 @@ export function Schedule() {
   const [doctorFilter, setDoctorFilter] = useState('');
   const [showCancelled, setShowCancelled] = useState(false);
   const [dialog, setDialog] = useState<Dialog>(null);
+  const [dropCol, setDropCol] = useState<Status | null>(null);
+  const [boardError, setBoardError] = useState<string | null>(null);
 
   const setView = (v: View) => {
     setViewState(v);
@@ -185,6 +189,17 @@ export function Schedule() {
     occupancy: t('viewOccupancy'), board: t('viewBoard'),
   };
 
+  async function moveTo(a: Appointment, status: Status) {
+    if (a.status === status) return;
+    setBoardError(null);
+    try {
+      await changeStatus(a, status);
+    } catch (err) {
+      const code = err instanceof ApiError ? err.code : 'other';
+      setBoardError(code === 'other' ? t('errorGeneric') : t(code as TKey));
+    }
+    await load();
+  }
   const open = (appt: Appointment) => setDialog({ kind: 'view', appt });
   const days = Array.from({ length: Math.round((to.getTime() - from.getTime()) / 86400000) }, (_, i) => addDays(from, i));
 
@@ -431,35 +446,72 @@ export function Schedule() {
       )}
 
       {view === 'board' && (
-        <div className="board">
-          {(['planned', 'confirmed', 'in_progress', 'done', 'cancelled'] as Status[]).map((s) => {
-            const colItems = items
-              .filter((a) => matches(a) && (s === 'cancelled' ? dead(a) : a.status === s))
-              .sort((a, b) => a.starts_at.localeCompare(b.starts_at));
-            return (
-              <div key={s} className="board-col">
-                <h2>
-                  {s === 'cancelled' ? t('cancelledGroup') : statusLabels[prefs.lang][s]} <span className="count">{colItems.length}</span>
-                </h2>
-                {colItems.length === 0 && <p className="muted small">{t('noItems')}</p>}
-                {colItems.map((a) => {
-                  const info = describe(a);
-                  return (
-                    <button key={a.id} className={`card-item status-${a.status}`} style={{ ['--h' as string]: info.hue }} onClick={() => open(a)}>
-                      <span className="muted small">
-                        {fmtTime(a.starts_at, prefs.lang)}–{fmtTime(a.ends_at, prefs.lang)}
-                        {s === 'cancelled' && ` · ${statusLabels[prefs.lang][a.status]}`}
-                      </span>
-                      <strong>{info.proc}</strong>
-                      <span>{info.patient}</span>
-                      <span className="muted small">{info.room}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            );
-          })}
-        </div>
+        <>
+          <p className="muted small hint">{t('boardHint')}</p>
+          {boardError && <p className="error" role="alert">{boardError}</p>}
+          <div className="board">
+            {(['planned', 'confirmed', 'in_progress', 'done', 'cancelled'] as Status[]).map((s) => {
+              const colItems = items
+                .filter((a) => matches(a) && (s === 'cancelled' ? dead(a) : a.status === s))
+                .sort((a, b) => a.starts_at.localeCompare(b.starts_at));
+              return (
+                <div
+                  key={s}
+                  className={`board-col${dropCol === s ? ' drop' : ''}`}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setDropCol(s);
+                  }}
+                  onDragLeave={() => setDropCol((c) => (c === s ? null : c))}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setDropCol(null);
+                    const a = items.find((x) => x.id === e.dataTransfer.getData('text/plain'));
+                    // Coloana „Anulat” grupează anulat și neprezentat: dacă e deja în ea, nu schimbăm nimic.
+                    if (a && !(s === 'cancelled' && dead(a))) void moveTo(a, s);
+                  }}
+                >
+                  <h2>
+                    {s === 'cancelled' ? t('cancelledGroup') : statusLabels[prefs.lang][s]} <span className="count">{colItems.length}</span>
+                  </h2>
+                  {colItems.length === 0 && <p className="muted small">{t('noItems')}</p>}
+                  {colItems.map((a) => {
+                    const info = describe(a);
+                    return (
+                      <div
+                        key={a.id}
+                        className={`card-item status-${a.status}`}
+                        style={{ ['--h' as string]: info.hue }}
+                        draggable
+                        onDragStart={(e) => e.dataTransfer.setData('text/plain', a.id)}
+                      >
+                        <button type="button" className="card-main" onClick={() => open(a)}>
+                          <span className="muted small">
+                            {fmtTime(a.starts_at, prefs.lang)}–{fmtTime(a.ends_at, prefs.lang)}
+                            {s === 'cancelled' && ` · ${statusLabels[prefs.lang][a.status]}`}
+                          </span>
+                          <strong>{info.proc}</strong>
+                          <span>{info.patient}</span>
+                          <span className="muted small">{info.room}</span>
+                        </button>
+                        <select
+                          className="card-status"
+                          aria-label={t('changeStatus')}
+                          value={a.status}
+                          onChange={(e) => void moveTo(a, e.target.value as Status)}
+                        >
+                          {STATUSES.map((x) => (
+                            <option key={x} value={x}>{statusLabels[prefs.lang][x]}</option>
+                          ))}
+                        </select>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </div>
+        </>
       )}
 
       {dialog?.kind === 'view' && (
@@ -467,6 +519,7 @@ export function Schedule() {
           appointment={items.find((a) => a.id === dialog.appt.id) ?? dialog.appt}
           onClose={() => setDialog(null)}
           onEdit={() => setDialog({ kind: 'edit', appt: items.find((a) => a.id === dialog.appt.id) ?? dialog.appt })}
+          onStatusChanged={() => void load()}
         />
       )}
       {(dialog?.kind === 'edit' || dialog?.kind === 'new') && (

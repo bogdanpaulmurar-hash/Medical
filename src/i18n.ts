@@ -179,6 +179,8 @@ const ro = {
   adminOnly: 'Doar administratorul poate modifica aceste setări.',
   add: 'Adaugă',
   edit: 'Editează',
+  changeStatus: 'Schimbă statusul',
+  boardHint: 'Trageți o programare în altă coloană sau folosiți meniul de status de pe ea. Schimbarea se salvează imediat și apare în istoric.',
   you: 'dvs.',
 };
 
@@ -352,6 +354,8 @@ const en: Dict = {
   adminOnly: 'Only the administrator can change these settings.',
   add: 'Add',
   edit: 'Edit',
+  changeStatus: 'Change status',
+  boardHint: 'Drag an appointment to another column, or use the status menu on it. The change is saved immediately and appears in the history.',
   you: 'you',
 };
 

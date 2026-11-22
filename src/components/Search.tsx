@@ -241,7 +241,12 @@ export function SearchPage() {
       )}
 
       {dialog?.kind === 'view' && (
-        <AppointmentDetail appointment={dialog.appt} onClose={() => setDialog(null)} onEdit={() => setDialog({ kind: 'edit', appt: dialog.appt })} />
+        <AppointmentDetail appointment={dialog.appt} onClose={() => setDialog(null)} onEdit={() => setDialog({ kind: 'edit', appt: dialog.appt })}
+          onStatusChanged={(saved) => {
+            setRows((old) => old.map((r) => (r.id === saved.id ? saved : r)));
+            setDialog({ kind: 'view', appt: saved });
+          }}
+        />
       )}
       {dialog?.kind === 'edit' && (
         <AppointmentForm

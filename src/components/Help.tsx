@@ -70,7 +70,8 @@ function HelpRo() {
 
       <h2>5. Modificare și anulare</h2>
       <ul>
-        <li>Apăsați pe o programare pentru a o modifica.</li>
+        <li>Apăsați pe o programare pentru a o deschide. Pentru a o modifica, apăsați <b>Editează</b>.</li>
+        <li><b>Schimbare rapidă de status</b>, fără editare: în fereastra programării apăsați direct statusul dorit (Confirmat, În desfășurare, Efectuat etc.). În vizualizarea <b>Pe status</b> puteți trage programarea în altă coloană sau folosi meniul de status de pe ea (pe telefon, folosiți meniul). Statusul nu se schimbă singur în funcție de oră. Orice schimbare apare în istoric.</li>
         <li>Programările nu se șterg: schimbați statusul în <b>Anulat</b> sau <b>Neprezentat</b>. Salonul se eliberează automat.</li>
         <li>Butonul <b>Istoric</b> din fereastra programării arată toate modificările acesteia.</li>
       </ul>
@@ -151,7 +152,8 @@ function HelpEn() {
 
       <h2>5. Changing and cancelling</h2>
       <ul>
-        <li>Tap an appointment to change it.</li>
+        <li>Tap an appointment to open it. To change its details, press <b>Edit</b>.</li>
+        <li><b>Quick status change</b>, without editing: in the appointment window tap the status you want (Confirmed, In progress, Done, etc.). In the <b>By status</b> view you can drag the appointment to another column or use the status menu on it (on a phone, use the menu). The status never changes by itself based on the time. Every change appears in the history.</li>
         <li>Appointments are never deleted: set the status to <b>Cancelled</b> or <b>No-show</b>. The room is freed automatically.</li>
         <li>The <b>History</b> button in the appointment window shows every change made to it.</li>
       </ul>
