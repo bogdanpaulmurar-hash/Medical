@@ -6,7 +6,9 @@ import type {
   AppointmentInput,
   AuditEntry,
   Cabinet,
+  DocKind,
   Patient,
+  PatientDocument,
   PlanItem,
   Procedure,
   Profile,
@@ -29,6 +31,7 @@ interface DB {
   patients: Patient[];
   plan: PlanItem[];
   settings: AppSettings;
+  documents?: PatientDocument[];
   appointments: Appointment[];
   audit: AuditEntry[];
 }
@@ -200,7 +203,7 @@ function seed(): DB {
   audit.reverse(); // cele mai noi primele
   return {
     profiles, cabinets, rooms, procedures, patients, plan, appointments, audit,
-    settings: { clinic_name: 'Clinica Demo', email_enabled: true, sms_enabled: false },
+    settings: { clinic_name: 'Clinica Demo', email_enabled: true, sms_enabled: false, keep_documents: true, documents_retention_days: null },
   };
 }
 
@@ -392,6 +395,51 @@ export class DemoApi implements Api {
     return this.db.appointments.filter((a) => a.patient_id === patientId).sort((a, b) => a.starts_at.localeCompare(b.starts_at));
   }
 
+  private requireDoctor() {
+    const me = this.db.profiles.find((p) => p.id === this.me());
+    if (!me || me.role === 'scheduler') throw new ApiError('forbidden', 'doctors only');
+  }
+  async getDocument(patientId: string, kind: DocKind) {
+    this.requireDoctor();
+    return (this.db.documents ?? []).find((d) => d.patient_id === patientId && d.kind === kind) ?? null;
+  }
+  async saveDocument(patientId: string, kind: DocKind, data: Record<string, unknown>) {
+    this.requireDoctor();
+    const now = new Date().toISOString();
+    const list = (this.db.documents ??= []);
+    const i = list.findIndex((d) => d.patient_id === patientId && d.kind === kind);
+    const doc: PatientDocument = { id: i >= 0 ? list[i].id : uid(), patient_id: patientId, kind, data, updated_at: now };
+    const meta = { id: doc.id, patient_id: patientId, kind };
+    if (i >= 0) list[i] = doc; else list.push(doc);
+    this.audit('patient_documents', doc.id, i >= 0 ? 'UPDATE' : 'INSERT', i >= 0 ? meta : null, meta);
+    this.persist();
+    return doc;
+  }
+  async purgeExpiredDocuments() {
+    this.requireDoctor();
+    const days = this.db.settings.documents_retention_days;
+    if (!days || !this.db.documents) return 0;
+    const limit = Date.now() - days * 86400_000;
+    const keep = this.db.documents.filter((d) => new Date(d.updated_at).getTime() > limit);
+    const n = this.db.documents.length - keep.length;
+    if (n) {
+      this.db.documents.filter((d) => !keep.includes(d)).forEach((d) =>
+        this.audit('patient_documents', d.id, 'DELETE', { id: d.id, patient_id: d.patient_id, kind: d.kind }, null));
+      this.db.documents = keep;
+      this.persist();
+    }
+    return n;
+  }
+  async deleteDocument(patientId: string, kind: DocKind) {
+    this.requireDoctor();
+    const list = this.db.documents ?? [];
+    const i = list.findIndex((d) => d.patient_id === patientId && d.kind === kind);
+    if (i < 0) return;
+    const meta = { id: list[i].id, patient_id: patientId, kind };
+    list.splice(i, 1);
+    this.audit('patient_documents', meta.id, 'DELETE', meta, null);
+    this.persist();
+  }
   async getSettings() {
     return { ...this.db.settings };
   }

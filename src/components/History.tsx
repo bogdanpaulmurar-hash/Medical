@@ -110,6 +110,9 @@ export function AuditList({ recordId, refreshKey, filters }: { recordId?: string
       const pt = patients.find((x) => x.id === d.patient_id)?.code ?? '';
       return `${pt} ${procedures.find((x) => x.id === d.procedure_id)?.name ?? ''}`.trim();
     }
+    if (e.table_name === 'patient_documents') {
+      return `${patients.find((x) => x.id === d.patient_id)?.code ?? ''} ${d.kind ?? ''}`.trim();
+    }
     return String(d.name ?? d.full_name ?? d.email ?? '');
   };
 

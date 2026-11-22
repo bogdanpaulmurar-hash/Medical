@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useApp } from '../state';
+import { api, useApp } from '../state';
 import { loadBilet, type BiletData } from '../data/vademecum';
 
 interface Inv { w: 'i' | 'a'; t: string; n: string; d: string; z: string; dr: string; x: string }
@@ -13,7 +13,7 @@ const num = (x: string | undefined) => {
 const fmtDate = (iso: string) => (/^\d{4}-\d{2}-\d{2}$/.test(iso) ? iso.split('-').reverse().join('.') : '');
 
 export function BiletTab() {
-  const { t, patients, plan, procedures } = useApp();
+  const { t, patients, plan, procedures, settings, me } = useApp();
   const [D, setD] = useState<BiletData | null>(null);
   const [failed, setFailed] = useState(false);
   const [f, setF] = useState<Form>(empty());
@@ -21,6 +21,37 @@ export function BiletTab() {
   const [msg, setMsg] = useState('');
 
   useEffect(() => { loadBilet().then(setD).catch(() => setFailed(true)); }, []);
+
+  // Salvare la pacient (dacă păstrarea este pornită în Setări): se încarcă la alegerea pacientului, se salvează automat după o pauză.
+  const canSave = !!pat && settings.keep_documents && !!me && me.role !== 'scheduler';
+  const [saved, setSaved] = useState<'' | 'loading' | 'saving' | 'saved' | 'error'>('');
+  const [loadedFor, setLoadedFor] = useState('');
+  useEffect(() => {
+    setLoadedFor('');
+    if (!pat || !canSave) { setSaved(''); return; }
+    let live = true;
+    setSaved('loading');
+    api.getDocument(pat, 'bilet').then((doc) => {
+      if (!live) return;
+      const d = doc?.data as Partial<Form> | undefined;
+      setF(d ? { v: d.v ?? {}, sex: d.sex ?? '', neu: !!d.neu, inv: d.inv ?? [] } : empty());
+      setLoadedFor(pat);
+      setSaved(doc ? 'saved' : '');
+    }).catch(() => { if (live) setSaved('error'); });
+    return () => { live = false; };
+  }, [pat, canSave]);
+  useEffect(() => {
+    if (!canSave || loadedFor !== pat) return;
+    const id = setTimeout(() => {
+      setSaved('saving');
+      api.saveDocument(pat, 'bilet', f as unknown as Record<string, unknown>).then(() => setSaved('saved')).catch(() => setSaved('error'));
+    }, 1200);
+    return () => clearTimeout(id);
+  }, [f, canSave, pat, loadedFor]);
+  const removeSaved = async () => {
+    if (!confirm(t('biDeleteSaved') + '?')) return;
+    try { await api.deleteDocument(pat, 'bilet'); setF(empty()); setSaved(''); setLoadedFor(''); setTimeout(() => setLoadedFor(pat), 0); } catch { setSaved('error'); }
+  };
 
   const procNames = useMemo(() => {
     if (!pat) return '';
@@ -268,7 +299,12 @@ export function BiletTab() {
             <button type="button" className="btn sm" onClick={() => { if (confirm(t('scReset') + '?')) { setF(empty()); setMsg(''); } }}>{t('scReset')}</button>
           </div>
           {msg && <p className="muted small" role="status">{msg}</p>}
-          <p className="muted small">{t('biNote')}</p>
+          <p className="muted small" role="status">
+            {canSave
+              ? saved === 'saving' ? t('biSaving') : saved === 'saved' ? t('biSaved') : saved === 'error' ? t('biSaveError') : saved === 'loading' ? t('loading') : t('biAutoSave')
+              : t('biNote')}
+          </p>
+          {canSave && saved === 'saved' && <button type="button" className="btn sm" onClick={removeSaved}>{t('biDeleteSaved')}</button>}
         </aside>
       </div>
     </div>

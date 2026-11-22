@@ -2,7 +2,7 @@ import { createClient, type PostgrestError, type SupabaseClient } from '@supabas
 import type { Api, AuditFilters, SearchFilters } from './api';
 import { ApiError } from './api';
 import type {
-  AppSettings, Appointment, AppointmentInput, AuditEntry, Cabinet, Patient, PlanItem, Procedure, Profile, Room,
+  AppSettings, Appointment, AppointmentInput, AuditEntry, Cabinet, DocKind, Patient, PatientDocument, PlanItem, Procedure, Profile, Room,
 } from '../types';
 
 function check<T>(res: { data: T; error: PostgrestError | null }): T {
@@ -131,9 +131,24 @@ export class SupabaseApi implements Api {
     ) as Appointment[];
   }
 
+  async getDocument(patientId: string, kind: DocKind) {
+    const r = await this.sb.from('patient_documents').select('*').eq('patient_id', patientId).eq('kind', kind).maybeSingle();
+    return (check(r) ?? null) as PatientDocument | null;
+  }
+  async saveDocument(patientId: string, kind: DocKind, data: Record<string, unknown>) {
+    const r = await this.sb.from('patient_documents').upsert({ patient_id: patientId, kind, data }, { onConflict: 'patient_id,kind' }).select().single();
+    return check(r) as PatientDocument;
+  }
+  async purgeExpiredDocuments() {
+    const r = await this.sb.rpc('purge_expired_documents');
+    return Number(check(r) ?? 0);
+  }
+  async deleteDocument(patientId: string, kind: DocKind) {
+    check(await this.sb.from('patient_documents').delete().eq('patient_id', patientId).eq('kind', kind));
+  }
   async getSettings() {
     return check(
-      await this.sb.from('app_settings').select('clinic_name,email_enabled,sms_enabled').eq('id', 1).single(),
+      await this.sb.from('app_settings').select('clinic_name,email_enabled,sms_enabled,keep_documents,documents_retention_days').eq('id', 1).single(),
     ) as AppSettings;
   }
   async updateSettings(patch: Partial<AppSettings>) {
