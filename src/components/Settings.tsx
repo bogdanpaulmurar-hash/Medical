@@ -1,4 +1,5 @@
 import { ProductionWizard } from './Wizard';
+import { PasswordForm } from './PasswordForm';
 import { useState } from 'react';
 import { ApiError } from '../data/api';
 import { api, useApp, type Theme } from '../state';
@@ -76,6 +77,12 @@ function Personal() {
           />
         </label>
       </div>
+      {api.mode === 'supabase' && (
+        <details>
+          <summary>{t('pwChange' as TKey)}</summary>
+          <PasswordForm />
+        </details>
+      )}
     </div>
   );
 }

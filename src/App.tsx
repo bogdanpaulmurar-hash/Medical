@@ -9,15 +9,17 @@ import { SearchPage } from './components/Search';
 import { PatientsPage } from './components/Patients';
 import { GuidesPage } from './components/Guides';
 import { IS_TEST } from './envKey';
+import { SetPasswordScreen } from './components/PasswordForm';
 import { DemoApi } from './data/demoApi';
 
 type Page = 'schedule' | 'patients' | 'guides' | 'search' | 'history' | 'settings' | 'help';
 
 export default function App() {
   const [userId, setUserId] = useState<string | null | undefined>(undefined);
+  const [setup, setSetup] = useState(false);
 
   useEffect(() => {
-    const refresh = () => void api.getSessionUserId().then(setUserId);
+    const refresh = () => void api.getSessionUserId().then((id) => { setSetup(api.passwordSetupPending()); setUserId(id); });
     refresh();
     return api.onAuthChange(refresh);
   }, []);
@@ -25,7 +27,7 @@ export default function App() {
   if (userId === undefined) return null;
   return (
     <AppProvider userId={userId}>
-      {userId ? <Shell /> : <Login />}
+      {userId && setup ? <SetPasswordScreen onDone={() => { api.clearPasswordSetup(); setSetup(false); }} /> : userId ? <Shell /> : <Login />}
     </AppProvider>
   );
 }

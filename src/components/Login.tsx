@@ -1,12 +1,13 @@
 import { IS_TEST } from '../envKey';
 import { useEffect, useState } from 'react';
 import { api, useApp } from '../state';
-import { roleLabels, type Lang } from '../i18n';
+import { roleLabels, type Lang, type TKey } from '../i18n';
 import type { Profile } from '../types';
 
 export function Login() {
   const { t, prefs, setPrefs } = useApp();
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -21,14 +22,22 @@ export function Login() {
     setBusy(true);
     setError(null);
     try {
-      await api.sendMagicLink(email.trim(), window.location.origin + window.location.pathname);
-      setSent(true);
+      await api.signInWithPassword(email.trim(), password);
     } catch {
-      // Mesaj generic: nu dezvăluim dacă emailul există.
-      setSent(true);
+      setError(t('loginBad' as TKey));
     } finally {
       setBusy(false);
     }
+  }
+
+  async function forgot() {
+    if (!email.trim()) { setError(t('email')); return; }
+    setBusy(true);
+    setError(null);
+    // Mesaj generic: nu dezvăluim dacă emailul există.
+    try { await api.sendPasswordReset(email.trim(), window.location.origin + window.location.pathname); } catch { /* ignorat */ }
+    setSent(true);
+    setBusy(false);
   }
 
   return (
@@ -60,7 +69,7 @@ export function Login() {
             </div>
           </>
         ) : sent ? (
-          <p role="status">{t('linkSent')}</p>
+          <p role="status">{t('loginResetSent' as TKey)}</p>
         ) : (
           <form onSubmit={submit} className="stack">
             <p className="muted">{t('loginIntro')}</p>
@@ -68,8 +77,15 @@ export function Login() {
               {t('email')}
               <input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
             </label>
+            <label>
+              {t('loginPassword' as TKey)}
+              <input type="password" required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+            </label>
             <button type="submit" disabled={busy}>
-              {t('sendLink')}
+              {t('loginSubmit' as TKey)}
+            </button>
+            <button type="button" className="linkbtn" disabled={busy} onClick={() => void forgot()}>
+              {t('loginForgot' as TKey)}
             </button>
             <p className="muted small">{t('loginOnlyInvited')}</p>
             {error && <p className="error">{error}</p>}
