@@ -454,3 +454,5 @@ table.occ td { padding: 0; border: 0; }
   background: transparent; border: 0; padding: 0; min-height: 0; font-weight: 400; color: inherit;
 }
 .card-item .card-status { width: 100%; margin-top: 0.4rem; min-height: 2rem; padding: 0.15rem 0.4rem; font-size: 0.85rem; }
+
+.ver-pill { font-size: 0.7rem; font-weight: 600; padding: 0.05rem 0.45rem; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); color: var(--muted); }
