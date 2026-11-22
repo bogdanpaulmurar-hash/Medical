@@ -113,3 +113,24 @@ export const EVIDENCE_LABEL: Record<string, { ro: string; en: string }> = {
   u: { ro: 'nivel nespecificat', en: 'level not specified' },
   b: { ro: 'manual de referință', en: 'reference textbook' },
 };
+
+export interface ExamSource { r?: string; l?: string; se?: number; sp?: number; os?: string; [k: string]: unknown }
+export interface ExamTest {
+  id: string; t: string; h?: string; k?: string; ord?: string; g?: string; rule?: number;
+  opt?: { t: string; lr: number | null; ci?: number[] }[];
+  num?: { u: string; op?: string; x?: number; b?: { l?: string; op: string; x: number; lr: number; ci?: number[] }[] };
+  v: ExamSource[];
+}
+export interface ExamComb {
+  id: string; t: string; r: string; m: string[]; x?: string[]; h?: string;
+  rules: { t: string; m?: string[]; st: { a: number; b: number; lr: number; ci?: number[]; sec?: string; calc?: number }[] }[];
+}
+export interface ExamCond { id: string; t: string; pre: number | null; preN?: string; note: string; tests: ExamTest[]; k?: ExamComb[] }
+export interface ExamData {
+  EX_QT: Record<string, string>; EX_REF: Record<string, { q: string; c: string }>;
+  EX_REG: { id: string; t: string; c: ExamCond[] }[];
+  EX_ROM_AGES: string[]; EX_ROM: unknown[][]; EX_ROM_REF: string;
+  EX_SCALES: { id: string; t: string; r: string; g: string[][] }[];
+  EX_PAT: Record<string, string>; EX_THR_REF: string;
+}
+export const loadExam = () => load<ExamData>('exam.json');
