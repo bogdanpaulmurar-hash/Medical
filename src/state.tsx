@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { Api } from './data/api';
+import { NS } from './envKey';
 import { DemoApi } from './data/demoApi';
 import { SupabaseApi } from './data/supabaseApi';
 import { dictionaries, type Lang, type TKey } from './i18n';
@@ -22,7 +23,7 @@ export interface Prefs {
   fontScale: number; // 0.85 – 1.5
 }
 
-const PREFS_KEY = 'medsched-prefs';
+const PREFS_KEY = 'medsched-prefs' + NS;
 function loadPrefs(): Prefs {
   const fallback: Prefs = {
     lang: navigator.language?.toLowerCase().startsWith('ro') ? 'ro' : 'en',

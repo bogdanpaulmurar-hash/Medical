@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { api, useApp } from '../state';
+import { NS } from '../envKey';
 import { loadReferate, loadScales, type ReferateData, type ScaleData } from '../data/vademecum';
 import { scCompute } from '../data/scaleEngine';
 import { createReferate } from '../data/referateEngine';
 
-const DRAFT_KEY = 'medslot-referate-draft';
-const MED_KEY = 'medslot-referate-medic';
+const DRAFT_KEY = 'medslot-referate-draft' + NS;
+const MED_KEY = 'medslot-referate-medic' + NS;
 // Toate rubricile celor 4 formulare (A16, A5, handicap, A39B) stau într-un singur document la pacient, de tip „a16”.
 const KIND = 'a16' as const;
 
