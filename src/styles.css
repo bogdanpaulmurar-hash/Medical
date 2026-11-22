@@ -701,3 +701,12 @@ button.sc-card .muted { white-space: normal; }
 .rf-host .btn.sm{min-height:0}
 .rf-host .rf-rg label{display:inline-flex;flex-direction:row;align-items:center;gap:6px;width:auto;margin:0 14px 4px 0}
 .rf-host .rf-rg.rf-col label{display:flex}
+
+.wz-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.wz-step{border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;background:var(--surface)}
+.wz-step.done{border-color:var(--ok)}
+.wz-step b{display:block;margin-bottom:4px}
+.wz-step p{margin:4px 0}
+.wz-step .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.wz summary{cursor:pointer}
+.wz .btn.danger{background:transparent;color:var(--danger);border-color:var(--danger)}
