@@ -28,11 +28,32 @@ export class SupabaseApi implements Api {
   readonly mode = 'supabase' as const;
   private sb: SupabaseClient;
 
+  private setupPending = false;
+
   constructor(url: string, anonKey: string) {
+    // Linkurile de invitație și de resetare vin cu #...type=invite|recovery: aflăm asta înainte ca biblioteca să curețe adresa.
+    this.setupPending = /[#&]type=(invite|recovery)/.test(window.location.hash);
+    // Flux „implicit”: invitațiile trimise de administrator nu funcționează cu PKCE.
     this.sb = createClient(url, anonKey, {
-      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce' },
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'implicit' },
     });
+    this.sb.auth.onAuthStateChange((ev) => { if (ev === 'PASSWORD_RECOVERY') this.setupPending = true; });
   }
+
+  async signInWithPassword(email: string, password: string) {
+    const { error } = await this.sb.auth.signInWithPassword({ email, password });
+    if (error) throw toApiError(error as unknown as Error);
+  }
+  async sendPasswordReset(email: string, redirectTo: string) {
+    const { error } = await this.sb.auth.resetPasswordForEmail(email, { redirectTo });
+    if (error) throw toApiError(error as unknown as Error);
+  }
+  async updatePassword(password: string) {
+    const { error } = await this.sb.auth.updateUser({ password });
+    if (error) throw toApiError(error as unknown as Error);
+  }
+  passwordSetupPending() { return this.setupPending; }
+  clearPasswordSetup() { this.setupPending = false; }
 
   async getSessionUserId() {
     const { data } = await this.sb.auth.getSession();

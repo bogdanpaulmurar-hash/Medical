@@ -48,6 +48,12 @@ export interface Api {
   // Autentificare
   getSessionUserId(): Promise<string | null>;
   sendMagicLink(email: string, redirectTo: string): Promise<void>;
+  signInWithPassword(email: string, password: string): Promise<void>;
+  sendPasswordReset(email: string, redirectTo: string): Promise<void>;
+  updatePassword(password: string): Promise<void>;
+  /** true când persoana a venit din linkul de invitație sau de resetare și trebuie să-și aleagă parola. */
+  passwordSetupPending(): boolean;
+  clearPasswordSetup(): void;
   signOut(): Promise<void>;
   onAuthChange(cb: () => void): () => void;
 
