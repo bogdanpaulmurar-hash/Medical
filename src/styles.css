@@ -710,3 +710,6 @@ button.sc-card .muted { white-space: normal; }
 .wz-step .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .wz summary{cursor:pointer}
 .wz .btn.danger{background:transparent;color:var(--danger);border-color:var(--danger)}
+
+.test-banner{background:#e0e7ff;color:#1e3a8a;text-align:center;padding:6px 12px;font-weight:600;font-size:.9rem}
+@media (prefers-color-scheme: dark){:root:not([data-theme='light']) .test-banner{background:#1e2a5a;color:#c7d2fe}}

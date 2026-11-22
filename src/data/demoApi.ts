@@ -14,14 +14,15 @@ import type {
   Profile,
   Room,
 } from '../types';
+import { NS } from '../envKey';
 import { CATALOG_CATEGORIES, CATALOG_PROCEDURES, CATALOG_ROOMS } from './catalog';
 
 /**
  * MOD DEMO: totul rămâne în localStorage-ul acestui browser.
  * Toate datele sunt FICTIVE. Folosit doar pentru încercarea interfeței.
  */
-const KEY = 'medsched-demo-v4';
-const SESSION_KEY = 'medsched-demo-session';
+const KEY = 'medsched-demo-v4' + NS;
+const SESSION_KEY = 'medsched-demo-session' + NS;
 
 interface DB {
   profiles: Profile[];

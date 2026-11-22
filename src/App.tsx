@@ -8,6 +8,7 @@ import { Help } from './components/Help';
 import { SearchPage } from './components/Search';
 import { PatientsPage } from './components/Patients';
 import { GuidesPage } from './components/Guides';
+import { IS_TEST } from './envKey';
 import { DemoApi } from './data/demoApi';
 
 type Page = 'schedule' | 'patients' | 'guides' | 'search' | 'history' | 'settings' | 'help';
@@ -68,6 +69,7 @@ function Shell() {
 
   return (
     <>
+      {IS_TEST && <div className="test-banner" role="note">{t('testBanner')}</div>}
       {api.mode === 'demo' && (
         <div className="demo-banner" role="note">
           {t('demoBanner')}{' '}

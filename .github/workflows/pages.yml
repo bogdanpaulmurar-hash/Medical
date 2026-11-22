@@ -1,5 +1,8 @@
 name: Deploy to GitHub Pages
 
+# Aplicația reală (ramura main) stă la rădăcina site-ului, iar versiunea de test
+# (ramura test, o copie a lui main plus modificările în curs) la /test/.
+# Rulează întotdeauna din main; ramura test declanșează această rulare prin test-trigger.yml.
 on:
   push:
     branches: [main]
@@ -19,6 +22,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -30,6 +36,22 @@ jobs:
           # Dacă lipsesc, aplicația pornește în MOD DEMO (date fictive).
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+      - name: Versiunea de test (dacă există ramura test)
+        run: |
+          if git ls-remote --exit-code --heads origin test >/dev/null 2>&1; then
+            git fetch origin test
+            git worktree add ../test-src origin/test
+            (cd ../test-src && npm ci && npm run build)
+            mkdir -p dist/test
+            cp -r ../test-src/dist/. dist/test/
+          else
+            echo "Nu există ramura test: se publică doar aplicația reală."
+          fi
+        env:
+          # Pentru test: fie un proiect Supabase separat (TEST_SUPABASE_*), fie, dacă lipsesc, mod demo.
+          VITE_ENV: test
+          VITE_SUPABASE_URL: ${{ vars.TEST_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.TEST_SUPABASE_ANON_KEY }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

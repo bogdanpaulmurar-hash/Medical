@@ -5,6 +5,7 @@ export type Lang = 'ro' | 'en';
 const ro = {
   appName: 'Vademecum MFR',
   tagline: 'Programarea procedurilor medicale',
+  testBanner: 'VERSIUNE DE TEST: aici se încearcă modificările înainte să ajungă în aplicația reală. Datele de aici nu se păstrează pentru utilizarea reală.',
   demoBanner: 'MOD DEMO: date fictive, salvate doar în acest browser. Nu introduceți date reale.',
   demoReset: 'Resetează datele demo',
   // nav
@@ -352,6 +353,7 @@ type Dict = typeof ro;
 const en: Dict = {
   appName: 'Vademecum MFR',
   tagline: 'Medical procedure scheduling',
+  testBanner: 'TEST VERSION: changes are tried here before they reach the real app. Data entered here is not kept for real use.',
   demoBanner: 'DEMO MODE: fake data, stored only in this browser. Do not enter real data.',
   demoReset: 'Reset demo data',
   navSchedule: 'Schedule',

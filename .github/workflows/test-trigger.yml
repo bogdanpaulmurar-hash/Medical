@@ -1,0 +1,19 @@
+name: Publică versiunea de test
+
+# O modificare pusă pe ramura test pornește publicarea site-ului (din main, ca să respecte
+# regulile mediului github-pages), care construiește și versiunea de test la /test/.
+on:
+  push:
+    branches: [test]
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run pages.yml --repo "$GITHUB_REPOSITORY" --ref main
