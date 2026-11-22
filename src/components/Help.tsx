@@ -32,11 +32,11 @@ function HelpRo() {
 
       <h2>1. Autentificare</h2>
       <ol>
-        <li>Deschideți aplicația și scrieți adresa de email.</li>
-        <li>Apăsați <b>Trimite linkul</b>. Veți primi un email cu un link de autentificare.</li>
-        <li>Deschideți linkul pe <b>același dispozitiv</b>. Nu există parolă.</li>
-        <li>Doar persoanele invitate de administrator pot intra. Dacă emailul nu ajunge, verificați și Spam.</li>
-        <li>La final apăsați <b>Ieșire</b> (sus, dreapta), mai ales pe un dispozitiv folosit și de alții.</li>
+        <li><b>Prima dată:</b> administratorul vă invită, iar dumneavoastră primiți un singur email cu un link. Deschideți-l, alegeți o parolă de cel puțin 10 caractere și sunteți conectat.</li>
+        <li><b>De fiecare dată după aceea:</b> scrieți adresa de email și parola, apoi apăsați <b>Intră</b>. Nu se mai trimite niciun email.</li>
+        <li>Rămâneți conectat pe acel calculator sau telefon, fără delogare automată, până apăsați <b>Ieșire</b> sau ștergeți datele browserului. Pe un calculator folosit de mai multe persoane, apăsați <b>Ieșire</b> la schimbarea turei: așa intră următoarea persoană cu contul ei.</li>
+        <li>Dacă ați uitat parola: la ecranul de intrare apăsați <b>Prima conectare sau am uitat parola</b>. Primiți pe email un link pentru a alege altă parolă (verificați și Spam). Parola se poate schimba oricând și din Setări, la Preferințe personale.</li>
+        <li>Doar persoanele invitate de administrator pot intra.</li>
       </ol>
 
       <h2>2. Instalare și actualizare</h2>
@@ -44,7 +44,7 @@ function HelpRo() {
         <li><b>Android / Chrome:</b> meniul ⋮ → <i>Instalează aplicația</i> (sau <i>Adaugă pe ecranul de pornire</i>).</li>
         <li><b>iPhone / Safari:</b> butonul Partajare → <i>Adaugă pe ecranul principal</i>.</li>
         <li><b>Calculator (Chrome / Edge):</b> pictograma de instalare din bara de adrese.</li>
-        <li><b>Versiunea aplicației</b> apare sus, lângă numele Vademecum MFR (de exemplu <i>v4.6</i>). Pe calculator, ținând cursorul deasupra ei, vedeți și data build-ului. Aceeași informație este jos, pe pagina de login, în Setări și aici.</li>
+        <li><b>Versiunea aplicației</b> apare sus, lângă numele Vademecum MFR (de exemplu <i>v4.7</i>). Pe calculator, ținând cursorul deasupra ei, vedeți și data build-ului. Aceeași informație este jos, pe pagina de login, în Setări și aici.</li>
         <li><b>Actualizare:</b> după o lansare nouă, dacă nu vedeți numărul nou de versiune, închideți complet aplicația (o scoateți din aplicațiile deschise) și deschideți-o din nou.</li>
       </ul>
 
@@ -184,11 +184,11 @@ function HelpEn() {
 
       <h2>1. Signing in</h2>
       <ol>
-        <li>Open the app and type your email address.</li>
-        <li>Press <b>Send link</b>. You will receive an email with a sign-in link.</li>
-        <li>Open the link on the <b>same device</b>. There is no password.</li>
-        <li>Only people invited by the administrator can sign in. If the email does not arrive, check Spam too.</li>
-        <li>When you are done press <b>Sign out</b> (top right), especially on a device others use.</li>
+        <li><b>The first time:</b> the administrator invites you and you receive a single email with a link. Open it, choose a password of at least 10 characters and you are signed in.</li>
+        <li><b>Every time after that:</b> type your email address and password, then press <b>Sign in</b>. No more emails are sent.</li>
+        <li>You stay signed in on that computer or phone, with no automatic sign-out, until you press <b>Sign out</b> or clear the browser data. On a computer shared by several people, press <b>Sign out</b> at shift change: the next person then signs in with their own account.</li>
+        <li>If you forgot your password: on the sign-in screen press <b>First sign-in or forgot password</b>. You receive an email with a link to choose a new password (check Spam too). You can also change the password any time in Settings, under Personal preferences.</li>
+        <li>Only people invited by the administrator can sign in.</li>
       </ol>
 
       <h2>2. Installing and updating</h2>
@@ -196,7 +196,7 @@ function HelpEn() {
         <li><b>Android / Chrome:</b> menu ⋮ → <i>Install app</i> (or <i>Add to Home screen</i>).</li>
         <li><b>iPhone / Safari:</b> Share button → <i>Add to Home Screen</i>.</li>
         <li><b>Computer (Chrome / Edge):</b> the install icon in the address bar.</li>
-        <li><b>The app version</b> is shown at the top, next to the Vademecum MFR name (for example <i>v4.6</i>). On a computer, hover over it to see the build date too. The same information is at the bottom of the login page, in Settings and here.</li>
+        <li><b>The app version</b> is shown at the top, next to the Vademecum MFR name (for example <i>v4.7</i>). On a computer, hover over it to see the build date too. The same information is at the bottom of the login page, in Settings and here.</li>
         <li><b>Updating:</b> after a new release, if you do not see the new version number, close the app completely (remove it from your open apps) and open it again.</li>
       </ul>
 

@@ -289,6 +289,11 @@ export class DemoApi implements Api {
     localStorage.setItem(SESSION_KEY, user.id);
     this.authListeners.forEach((cb) => cb());
   }
+  async signInWithPassword(email: string) { await this.sendMagicLink(email); }
+  async sendPasswordReset() { /* demo: fără email */ }
+  async updatePassword() { /* demo: fără parolă */ }
+  passwordSetupPending() { return false; }
+  clearPasswordSetup() { /* demo */ }
   async signOut() {
     localStorage.removeItem(SESSION_KEY);
     this.authListeners.forEach((cb) => cb());
