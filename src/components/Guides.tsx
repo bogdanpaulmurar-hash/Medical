@@ -21,7 +21,7 @@ function Rich({ text }: { text: string }) {
 type Tab = 'pat' | 'dev' | 'sc' | 'ex' | 'bi';
 
 export function GuidesPage() {
-  const { t } = useApp();
+  const { t, me } = useApp();
   const [tab, setTab] = useState<Tab>('pat');
   const [guide, setGuide] = useState<GuideData | null>(null);
   const [devices, setDevices] = useState<DeviceData | null>(null);
@@ -67,9 +67,9 @@ export function GuidesPage() {
         <button role="tab" aria-selected={tab === 'ex'} className={tab === 'ex' ? 'chip on' : 'chip'} onClick={() => setTab('ex')}>
           {t('guidesExam')}
         </button>
-        <button role="tab" aria-selected={tab === 'bi'} className={tab === 'bi' ? 'chip on' : 'chip'} onClick={() => setTab('bi')}>
+        {me?.role !== 'scheduler' && <button role="tab" aria-selected={tab === 'bi'} className={tab === 'bi' ? 'chip on' : 'chip'} onClick={() => setTab('bi')}>
           {t('guidesBilet')}
-        </button>
+        </button>}
       </div>
       <p className="muted small">{t('guidesSource')}</p>
       {tab === 'bi' ? (

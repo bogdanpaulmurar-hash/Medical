@@ -90,6 +90,10 @@ export interface AppSettings {
   clinic_name: string;
   email_enabled: boolean;
   sms_enabled: boolean;
+  /** Documentele medicale (bilet, referate) se păstrează la pacient. */
+  keep_documents: boolean;
+  /** Câte zile de la ultima modificare se păstrează un document; null = până îl șterge cineva. */
+  documents_retention_days: number | null;
 }
 
 export interface Appointment {
@@ -133,4 +137,13 @@ export interface AuditEntry {
 export interface Conflict {
   kind: 'room' | 'attending' | 'receiving' | 'patient';
   appointment: Appointment;
+}
+
+export type DocKind = 'bilet' | 'a16' | 'a5' | 'hc' | 'a39b';
+export interface PatientDocument {
+  id: string;
+  patient_id: string;
+  kind: DocKind;
+  data: Record<string, unknown>;
+  updated_at: string;
 }

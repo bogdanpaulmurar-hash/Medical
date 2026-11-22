@@ -75,7 +75,7 @@ const emptyLookups: Lookups = {
   procedures: [],
   patients: [],
   plan: [],
-  settings: { clinic_name: '', email_enabled: true, sms_enabled: false },
+  settings: { clinic_name: '', email_enabled: true, sms_enabled: false, keep_documents: true, documents_retention_days: null },
 };
 
 export function AppProvider({ userId, children }: { userId: string | null; children: ReactNode }) {
@@ -115,6 +115,12 @@ export function AppProvider({ userId, children }: { userId: string | null; child
     // Pacienții și planurile se schimbă de la mai multe persoane: reîncărcăm la orice modificare.
     return userId ? api.onPatientsChange(() => void reloadLookups()) : undefined;
   }, [reloadLookups, userId]);
+
+  // La deschidere, un medic șterge documentele expirate după politica de retenție.
+  const myRole = lookups.profiles.find((p) => p.id === userId)?.role;
+  useEffect(() => {
+    if (userId && myRole && myRole !== 'scheduler') void api.purgeExpiredDocuments().catch(() => undefined);
+  }, [userId, myRole]);
 
   const value = useMemo<Ctx>(() => {
     const dict = dictionaries[prefs.lang];

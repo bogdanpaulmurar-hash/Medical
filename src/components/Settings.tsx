@@ -453,6 +453,29 @@ function ClinicSettings({ isAdmin }: { isAdmin: boolean }) {
         {t('smsEnabled')}
       </label>
       <p className="muted small">{t('smsCostHint' as TKey)}</p>
+      <label className="inline">
+        <input
+          type="checkbox"
+          disabled={!isAdmin}
+          checked={settings.keep_documents}
+          onChange={(e) => void run(() => api.updateSettings({ keep_documents: e.target.checked }))}
+        />
+        {t('keepDocuments' as TKey)}
+      </label>
+      <p className="muted small">{t('keepDocumentsHint' as TKey)}</p>
+      {settings.keep_documents && (
+        <label>
+          <span>{t('retention' as TKey)}</span>
+          <select
+            disabled={!isAdmin}
+            value={settings.documents_retention_days ?? ''}
+            onChange={(e) => void run(() => api.updateSettings({ documents_retention_days: e.target.value ? Number(e.target.value) : null }))}
+          >
+            <option value="">{t('retentionForever' as TKey)}</option>
+            {[30, 90, 180, 365, 730].map((d) => <option key={d} value={d}>{d === 365 ? '12' : d === 730 ? '24' : String(d / 30)} {t('retentionMonths' as TKey)}</option>)}
+          </select>
+        </label>
+      )}
       {view}
     </div>
   );

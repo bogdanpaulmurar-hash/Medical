@@ -6,6 +6,8 @@ import type {
   Cabinet,
   Conflict,
   Patient,
+  PatientDocument,
+  DocKind,
   PatientKind,
   PlanItem,
   Procedure,
@@ -71,6 +73,13 @@ export interface Api {
   onPatientsChange(cb: () => void): () => void;
   /** Toate programările unui pacient (orice dată), cele mai vechi primele. */
   listPatientAppointments(patientId: string): Promise<Appointment[]>;
+
+  // Documente medicale la pacient (doar medicii; vezi migrarea 0004)
+  getDocument(patientId: string, kind: DocKind): Promise<PatientDocument | null>;
+  saveDocument(patientId: string, kind: DocKind, data: Record<string, unknown>): Promise<PatientDocument>;
+  deleteDocument(patientId: string, kind: DocKind): Promise<void>;
+  /** Șterge documentele expirate după politica de retenție; întoarce câte au fost șterse. */
+  purgeExpiredDocuments(): Promise<number>;
 
   // Setări
   getSettings(): Promise<AppSettings>;
