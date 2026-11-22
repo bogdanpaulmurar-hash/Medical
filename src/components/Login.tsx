@@ -1,3 +1,4 @@
+import { IS_TEST } from '../envKey';
 import { useEffect, useState } from 'react';
 import { api, useApp } from '../state';
 import { roleLabels, type Lang } from '../i18n';
@@ -32,6 +33,7 @@ export function Login() {
 
   return (
     <>
+    {IS_TEST && <div className="test-banner" role="note">{t('testBanner')}</div>}
     {api.mode === 'demo' && <div className="demo-banner" role="note">{t('demoBanner')}</div>}
     <main className="center-card">
       <div className="card login">
