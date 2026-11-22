@@ -94,7 +94,7 @@ export function PatientsPage() {
 
   const items = selected ? planOf(selected.id) : [];
   const pd = (): PlanPrintData => ({
-    org: settings.clinic_name, patient: selected as Patient, doctor: doctorName(selected?.doctor_id ?? null), items, procOf, roomOf, appts,
+    lang: prefs.lang, org: settings.clinic_name, patient: selected as Patient, doctor: doctorName(selected?.doctor_id ?? null), items, procOf, roomOf, appts,
   });
   const now = Date.now();
   const upcoming = appts.filter((a) => new Date(a.ends_at).getTime() >= now);
@@ -248,8 +248,8 @@ export function PatientsPage() {
               <div className="card">
                 <h2>{t('bookedHours')}</h2>
                 <div className="row">
-                  <button className="secondary small" onClick={() => printHtml(`Fișă de tratament ${selected.code}`, sheetHtml(pd()))}>🖨 {t('printSheet')}</button>
-                  <button className="secondary small" onClick={() => printHtml(`Orar ${selected.code}`, timetableHtml(pd()))}>🖨 {t('printTimetable')}</button>
+                  <button className="secondary small" onClick={() => printHtml(`${prefs.lang === 'en' ? 'Treatment sheet' : 'Fișă de tratament'} ${selected.code}`, sheetHtml(pd()), prefs.lang)}>🖨 {t('printSheet')}</button>
+                  <button className="secondary small" onClick={() => printHtml(`${prefs.lang === 'en' ? 'Timetable' : 'Orar'} ${selected.code}`, timetableHtml(pd()), prefs.lang)}>🖨 {t('printTimetable')}</button>
                 </div>
                 {upcoming.length === 0 && <p className="muted">{t('noBooked')}</p>}
                 <ul className="plain slot-rows">
