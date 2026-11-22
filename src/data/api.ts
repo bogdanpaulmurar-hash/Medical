@@ -76,6 +76,7 @@ export interface Api {
 
   // Documente medicale la pacient (doar medicii; vezi migrarea 0004)
   getDocument(patientId: string, kind: DocKind): Promise<PatientDocument | null>;
+  listDocuments(kind: DocKind): Promise<PatientDocument[]>;
   saveDocument(patientId: string, kind: DocKind, data: Record<string, unknown>): Promise<PatientDocument>;
   deleteDocument(patientId: string, kind: DocKind): Promise<void>;
   /** Șterge documentele expirate după politica de retenție; întoarce câte au fost șterse. */

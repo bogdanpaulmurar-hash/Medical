@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Fragment, Suspense, lazy, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { api, useApp } from '../state';
 import {
   EVIDENCE_LABEL, loadDevices, loadGuide, norm,
@@ -7,6 +7,7 @@ import {
 import { ScalesTab } from './Scales';
 import { ExamTab } from './Exam';
 import { BiletTab } from './Bilet';
+const ReferateTab = lazy(() => import('./Referate').then((m) => ({ default: m.ReferateTab })));
 import { CATALOG_PROCEDURES } from '../data/catalog';
 
 /** Text cu **îngroșat** și rânduri noi, cum vine din ghiduri. */
@@ -18,7 +19,7 @@ function Rich({ text }: { text: string }) {
   );
 }
 
-type Tab = 'pat' | 'dev' | 'sc' | 'ex' | 'bi';
+type Tab = 'pat' | 'dev' | 'sc' | 'ex' | 'bi' | 'rf';
 
 export function GuidesPage() {
   const { t, me } = useApp();
@@ -70,9 +71,14 @@ export function GuidesPage() {
         {me?.role !== 'scheduler' && <button role="tab" aria-selected={tab === 'bi'} className={tab === 'bi' ? 'chip on' : 'chip'} onClick={() => setTab('bi')}>
           {t('guidesBilet')}
         </button>}
+        {me?.role !== 'scheduler' && <button role="tab" aria-selected={tab === 'rf'} className={tab === 'rf' ? 'chip on' : 'chip'} onClick={() => setTab('rf')}>
+          {t('guidesReferate')}
+        </button>}
       </div>
       <p className="muted small">{t('guidesSource')}</p>
-      {tab === 'bi' ? (
+      {tab === 'rf' ? (
+        <Suspense fallback={<p className="muted">{t('loading')}</p>}><ReferateTab onTab={(x) => setTab(x === 'scale' ? 'sc' : 'rf')} /></Suspense>
+      ) : tab === 'bi' ? (
         <BiletTab />
       ) : tab === 'ex' ? (
         <ExamTab onPathology={openPathology} />

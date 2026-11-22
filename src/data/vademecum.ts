@@ -140,3 +140,5 @@ export interface BiletData {
   BI_REC: [string, string, boolean][]; BI_INV: string[][]; BI_LAS: string[][]; BI_PAT: string[][]; BI_GAP: string;
 }
 export const loadBilet = () => load<BiletData>('bilet.json');
+export interface ReferateData { dx999: string[]; a38: unknown[] }
+export const loadReferate = () => load<ReferateData>('referate.json');

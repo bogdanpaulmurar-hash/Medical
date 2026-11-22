@@ -135,6 +135,10 @@ export class SupabaseApi implements Api {
     const r = await this.sb.from('patient_documents').select('*').eq('patient_id', patientId).eq('kind', kind).maybeSingle();
     return (check(r) ?? null) as PatientDocument | null;
   }
+  async listDocuments(kind: DocKind) {
+    const r = await this.sb.from('patient_documents').select('*').eq('kind', kind);
+    return (check(r) ?? []) as PatientDocument[];
+  }
   async saveDocument(patientId: string, kind: DocKind, data: Record<string, unknown>) {
     const r = await this.sb.from('patient_documents').upsert({ patient_id: patientId, kind, data }, { onConflict: 'patient_id,kind' }).select().single();
     return check(r) as PatientDocument;

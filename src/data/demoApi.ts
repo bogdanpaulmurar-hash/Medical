@@ -403,6 +403,10 @@ export class DemoApi implements Api {
     this.requireDoctor();
     return (this.db.documents ?? []).find((d) => d.patient_id === patientId && d.kind === kind) ?? null;
   }
+  async listDocuments(kind: DocKind) {
+    this.requireDoctor();
+    return (this.db.documents ?? []).filter((d) => d.kind === kind);
+  }
   async saveDocument(patientId: string, kind: DocKind, data: Record<string, unknown>) {
     this.requireDoctor();
     const now = new Date().toISOString();
