@@ -1,6 +1,6 @@
-<p align="center"><img src="public/icon.svg" width="96" alt="MedSlot"></p>
+<p align="center"><img src="public/icon.svg" width="96" alt="Vademecum MFR"></p>
 
-# MedSlot
+# Vademecum MFR
 
 **RO:** Aplicație web (responsive + PWA) pentru programarea procedurilor medicale într-o clinică cu o singură locație, mai multe cabinete și saloane, pentru o echipă mică (~10 utilizatori).
 **EN:** Web app (responsive + installable PWA) for scheduling medical procedures in a single-site clinic with several offices and rooms, for a small team (~10 users).
@@ -130,7 +130,7 @@ supabase functions deploy notify --no-verify-jwt
 supabase secrets set APP_URL=https://adresa-aplicatiei.ro \
   WEBHOOK_SECRET=<un-secret-lung-aleator> \
   RESEND_API_KEY=<cheie-resend> \
-  MAIL_FROM="MedSlot <programari@domeniul-clinicii.ro>"
+  MAIL_FROM="Vademecum MFR <programari@domeniul-clinicii.ro>"
 ```
 
 Apoi **Database → Webhooks → Create**: tabela `appointments`, evenimente *Insert* + *Update*, tip *Supabase Edge Function* → `notify`, header `x-webhook-secret: <același secret>`.

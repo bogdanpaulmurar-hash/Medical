@@ -3,7 +3,7 @@ import type { Role, Status } from './types';
 export type Lang = 'ro' | 'en';
 
 const ro = {
-  appName: 'MedSlot',
+  appName: 'Vademecum MFR',
   tagline: 'Programarea procedurilor medicale',
   demoBanner: 'MOD DEMO: date fictive, salvate doar în acest browser. Nu introduceți date reale.',
   demoReset: 'Resetează datele demo',
@@ -249,7 +249,7 @@ const ro = {
 type Dict = typeof ro;
 
 const en: Dict = {
-  appName: 'MedSlot',
+  appName: 'Vademecum MFR',
   tagline: 'Medical procedure scheduling',
   demoBanner: 'DEMO MODE: fake data, stored only in this browser. Do not enter real data.',
   demoReset: 'Reset demo data',
