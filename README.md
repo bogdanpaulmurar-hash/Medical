@@ -22,6 +22,7 @@
 | **Verificare conflicte** salon / medic, în timp real în formular și garantată de baza de date | **Conflict check** for room / doctor, live in the form and enforced by the database |
 | Pacienți cu **fișă și plan de proceduri** (medicul îl construiește, persoana de la programări programează doar din plan, medicul vede orele) | Patients with a **record and procedure plan** (the doctor builds it, the scheduler books only from the plan, the doctor sees the hours) |
 | **Aparate cu capacitate** (pacienți simultan), proceduri cu durată, culoare, nume scurt și mai multe aparate posibile; catalogul secției MFR Cluj preîncărcat | **Devices with capacity** (patients at once), procedures with duration, color, short name and several possible devices; the MFR Cluj catalog preloaded |
+| **Ghiduri** din Vademecum: patologii cu recomandări, aparate cu programe/indicații/contraindicații; adăugare directă în planul pacientului | **Guides** from the Vademecum: pathologies with recommendations, devices with programmes/indications/contraindications; add straight to a patient's plan |
 | Cabinete, saloane, proceduri editabile din Setări (se dezactivează, nu se șterg) | Offices, rooms, procedures editable in Settings (deactivated, never deleted) |
 | Notificări email; SMS opțional, **dezactivat implicit** (cost per mesaj) | Email notifications; optional SMS, **off by default** (costs per message) |
 | Temă luminoasă / întunecată, mărime text reglabilă, RO / EN | Light / dark theme, adjustable text size, RO / EN |

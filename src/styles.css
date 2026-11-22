@@ -498,3 +498,34 @@ table.occ td { padding: 0; border: 0; }
 .device-pick legend { font-size: 0.8rem; color: var(--muted); padding: 0 0.3rem; }
 .row > input.color-input { flex: 0 0 2.2rem; width: 2.2rem; height: 2.2rem; padding: 0; }
 .row > input.inline-edit.short { flex: 0 1 8rem; }
+
+/* ---------- Ghiduri (Vademecum) ---------- */
+.chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.6rem; }
+.nav-tiles { display: grid; gap: 0.5rem; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); margin: 0.6rem 0; }
+.nav-tile { --ico-acc: #b45309; display: flex; gap: 0.6rem; align-items: center; text-align: left; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 0.5rem 0.65rem; }
+.nav-tile.on { border-color: var(--accent); background: var(--accent-soft); }
+.nav-ico { flex: 0 0 2.2rem; width: 2.2rem; height: 2.2rem; display: inline-flex; }
+.nav-ico svg { width: 100%; height: 100%; }
+.nav-txt { display: grid; gap: 0.1rem; }
+.nav-sub { font-size: 0.75rem; color: var(--muted); }
+.pat-list { display: grid; gap: 0.3rem; margin: 0.4rem 0; }
+.pat-list .pick { border-color: var(--border); }
+.note-box { background: var(--surface-2); border-radius: 8px; padding: 0.5rem 0.7rem; }
+.plan-bar { margin: 0.5rem 0; }
+.sec { margin-top: 0.9rem; }
+.sec h3 { margin: 0 0 0.4rem; font-size: 1rem; }
+.sec h4 { margin: 0.5rem 0 0.2rem; font-size: 0.85rem; color: var(--muted); }
+details.vg { margin: 0.35rem 0; border: 1px solid var(--border); border-radius: 8px; padding: 0.3rem 0.6rem; }
+details.vg > summary { cursor: pointer; font-weight: 600; }
+.vsign { display: inline-block; width: 1.3rem; text-align: center; font-weight: 700; }
+.vsign-rec { color: var(--ok); }
+.vsign-no { color: var(--danger); }
+.rec-rows { display: grid; gap: 0.4rem; margin: 0.4rem 0; }
+.rec-row { border-left: 3px solid var(--border); padding-left: 0.6rem; }
+.rec-rec { border-left-color: var(--ok); }
+.rec-no { border-left-color: var(--danger); }
+.rec-dev { display: inline-flex; align-items: center; gap: 0.1rem; margin-left: 0.25rem; }
+button.proc-chip { border: 0; cursor: pointer; }
+.tree { margin: 0.2rem 0; padding-left: 0.2rem; }
+.tree.sub { padding-left: 1rem; }
+.tree li { margin: 0.15rem 0; list-style: none; }

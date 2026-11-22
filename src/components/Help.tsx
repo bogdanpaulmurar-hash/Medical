@@ -44,13 +44,13 @@ function HelpRo() {
         <li><b>Android / Chrome:</b> meniul ⋮ → <i>Instalează aplicația</i> (sau <i>Adaugă pe ecranul de pornire</i>).</li>
         <li><b>iPhone / Safari:</b> butonul Partajare → <i>Adaugă pe ecranul principal</i>.</li>
         <li><b>Calculator (Chrome / Edge):</b> pictograma de instalare din bara de adrese.</li>
-        <li><b>Versiunea aplicației</b> apare sus, lângă numele Vademecum MFR (de exemplu <i>v3.2</i>). Pe calculator, ținând cursorul deasupra ei, vedeți și data build-ului. Aceeași informație este jos, pe pagina de login, în Setări și aici.</li>
+        <li><b>Versiunea aplicației</b> apare sus, lângă numele Vademecum MFR (de exemplu <i>v3.3</i>). Pe calculator, ținând cursorul deasupra ei, vedeți și data build-ului. Aceeași informație este jos, pe pagina de login, în Setări și aici.</li>
         <li><b>Actualizare:</b> după o lansare nouă, dacă nu vedeți numărul nou de versiune, închideți complet aplicația (o scoateți din aplicațiile deschise) și deschideți-o din nou.</li>
       </ul>
 
       <h2>3. Meniul aplicației</h2>
       <ul>
-        <li><b>Programări:</b> calendarul și programările. <b>Pacienți:</b> fișa pacientului, planul de proceduri și orele programate. <b>Căutare:</b> caută în toate programările, și în cele vechi. <b>Istoric:</b> toate modificările din aplicație. <b>Setări:</b> preferințe, categorii și aparate, proceduri, utilizatori. <b>Instrucțiuni:</b> această pagină, în română și engleză (butoanele de sus). <b>Ieșire:</b> deconectare.</li>
+        <li><b>Programări:</b> calendarul și programările. <b>Pacienți:</b> fișa pacientului, planul de proceduri și orele programate. <b>Ghiduri:</b> patologiile și aparatele din Vademecum. Alegeți categoria, apoi patologia: vedeți programul de kinetoterapie, recomandările și aparatele indicate. Alegeți un pacient sus și apăsați <b>+</b> lângă o procedură ca să o adăugați direct în planul lui. <b>Căutare:</b> caută în toate programările, și în cele vechi. <b>Istoric:</b> toate modificările din aplicație. <b>Setări:</b> preferințe, categorii și aparate, proceduri, utilizatori. <b>Instrucțiuni:</b> această pagină, în română și engleză (butoanele de sus). <b>Ieșire:</b> deconectare.</li>
         <li>Dacă vedeți bannerul galben <b>MODUL DEMO</b>, aplicația este în versiunea de probă: datele sunt fictive și rămân doar în acest browser. Nu introduceți date reale. <i>Resetează datele demo</i> le readuce la starea inițială.</li>
       </ul>
 
@@ -173,13 +173,13 @@ function HelpEn() {
         <li><b>Android / Chrome:</b> menu ⋮ → <i>Install app</i> (or <i>Add to Home screen</i>).</li>
         <li><b>iPhone / Safari:</b> Share button → <i>Add to Home Screen</i>.</li>
         <li><b>Computer (Chrome / Edge):</b> the install icon in the address bar.</li>
-        <li><b>The app version</b> is shown at the top, next to the Vademecum MFR name (for example <i>v3.2</i>). On a computer, hover over it to see the build date too. The same information is at the bottom of the login page, in Settings and here.</li>
+        <li><b>The app version</b> is shown at the top, next to the Vademecum MFR name (for example <i>v3.3</i>). On a computer, hover over it to see the build date too. The same information is at the bottom of the login page, in Settings and here.</li>
         <li><b>Updating:</b> after a new release, if you do not see the new version number, close the app completely (remove it from your open apps) and open it again.</li>
       </ul>
 
       <h2>3. App menu</h2>
       <ul>
-        <li><b>Schedule:</b> the calendar and appointments. <b>Patients:</b> the patient record, procedure plan and booked hours. <b>Search:</b> searches every appointment, including old ones. <b>History:</b> every change made in the app. <b>Settings:</b> preferences, categories and devices, procedures, users. <b>Instructions:</b> this page, in Romanian and English (buttons at the top). <b>Sign out:</b> log out.</li>
+        <li><b>Schedule:</b> the calendar and appointments. <b>Patients:</b> the patient record, procedure plan and booked hours. <b>Guides:</b> the pathologies and devices from the Vademecum. Pick a category, then a pathology: you see the kinetotherapy programme, recommendations and suitable devices. Choose a patient at the top and press <b>+</b> next to a procedure to add it straight to their plan. <b>Search:</b> searches every appointment, including old ones. <b>History:</b> every change made in the app. <b>Settings:</b> preferences, categories and devices, procedures, users. <b>Instructions:</b> this page, in Romanian and English (buttons at the top). <b>Sign out:</b> log out.</li>
         <li>If you see the yellow <b>DEMO MODE</b> banner, the app is the trial version: the data is fake and stays only in this browser. Do not enter real data. <i>Reset demo data</i> returns it to the starting state.</li>
       </ul>
 
