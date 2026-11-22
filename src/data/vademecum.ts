@@ -14,6 +14,7 @@ export interface GuideRow {
   ev: string; // nivelul dovezilor: h, m, l, v, u, b
   pg?: string;
   bk?: number; // 1 = din manualul de referință
+  o?: string[]; // tipuri de orteze la care se referă rândul
 }
 
 export interface PatCategory {
@@ -84,6 +85,14 @@ function load<T>(file: string): Promise<T> {
 }
 
 export const loadGuide = () => load<GuideData>('guide.json');
+export interface OrtData {
+  ORTHO: { id: string; name: string; reg: string }[];
+  ORT_REG: string[];
+  ORT_BOOK: Record<string, { pg: string; d?: string[]; b: [string, string[]][] }>;
+  ORT_GEN: [string, string[]][];
+  ORT_BOOK_REF: string[];
+}
+export const loadOrteze = () => load<OrtData>('orteze.json');
 export const loadDevices = () => load<DeviceData>('devices.json');
 
 export interface ScaleItem {

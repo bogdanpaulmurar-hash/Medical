@@ -734,3 +734,12 @@ button.sc-card .muted { white-space: normal; }
 .isn-bin .isn-s{max-width:100%}
 
 @media (max-width:899px){.isn-mu{display:none}.isn-t th,.isn-t td{padding:3px 2px}.isn-s{min-width:2.5em;padding:6px 2px;-webkit-appearance:none;appearance:none;text-align:center;text-align-last:center}.hd-l{display:none}.hd-s{display:inline}.isn-leg{display:block;margin:0}.isn-t{font-size:14px}.isn-lv{min-width:2.2em}}
+.linkbtn{background:none;border:0;padding:0;color:var(--accent);text-decoration:underline;cursor:pointer;font:inherit}
+.ort-box{border:1px solid var(--line,#d8dee4);border-radius:8px;margin:8px 0;padding:6px 10px}
+.ort-box>summary{cursor:pointer;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ort-body{padding:6px 0}
+.ort-bh{margin:12px 0 4px;font-size:.95rem}
+.ort-bl{margin:0 0 6px;padding-left:20px}
+.ort-bt{margin:12px 0 4px}
+.ort-diff{background:var(--soft,#f3f6f8);border-radius:6px;padding:4px 10px;margin:6px 0}
+.ort-st{font-size:.8rem;border:1px solid var(--line,#d8dee4);border-radius:999px;padding:1px 8px;white-space:nowrap}

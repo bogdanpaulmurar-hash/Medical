@@ -1,7 +1,8 @@
 import { Fragment, Suspense, lazy, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { api, useApp } from '../state';
 import {
-  EVIDENCE_LABEL, loadDevices, loadGuide, norm,
+  EVIDENCE_LABEL, loadDevices, loadGuide, loadOrteze, norm,
+  type OrtData,
   type Contra, type DeviceData, type DeviceInfo, type GuideData, type GuideRow, type GuideStatus, type TreeNode,
 } from '../data/vademecum';
 import { ScalesTab } from './Scales';
@@ -164,6 +165,8 @@ function PathologyPage({
 }) {
   const { t, prefs, me, plan, procedures, reloadLookups } = useApp();
   const [showBook, setShowBook] = useState(false);
+  const [ort, setOrt] = useState<OrtData | null>(null);
+  useEffect(() => { loadOrteze().then(setOrt).catch(() => setOrt(null)); }, []);
   const [patientId, setPatientId] = useState(() => {
     try {
       return sessionStorage.getItem('medsched-patient') ?? '';
@@ -283,6 +286,8 @@ function PathologyPage({
         );
       })}
 
+      {ort && <OrtSection name={name} guide={guide} ort={ort} lang={prefs.lang} onSelect={onSelect} />}
+
       {rows.length === 0 && bookRows.length === 0 && <p className="muted">{t('guidesNoRecs')}</p>}
 
       {srcs.length > 0 && (
@@ -343,6 +348,111 @@ function RecRow({
       </div>
       {r.n && <div className="small"><Rich text={r.n} /></div>}
     </li>
+  );
+}
+
+// ---------------------------------------------------------------------
+// Orteze, bandaje și mijloace de mers (pe pagina afecțiunii)
+// ---------------------------------------------------------------------
+const ORT_EXTRA: Record<string, string[]> = {
+  'Leziune medulară': ['kafo', 'functionale'], 'AVC': ['kafo', 'functionale'],
+  'Sindrom de tunel carpian': ['nervi'], 'Epicondilită medială': ['nervi'], 'Epicondilită laterală': ['nervi'],
+};
+
+function OrtBlocks({ blocks }: { blocks: [string, string[]][] }) {
+  return (
+    <>
+      {blocks.map(([title, items]) => (
+        <Fragment key={title}>
+          <h4 className="ort-bh">{title}</h4>
+          <ul className="ort-bl">{items.map((x, i) => <li key={i}><Rich text={x} /></li>)}</ul>
+        </Fragment>
+      ))}
+    </>
+  );
+}
+
+function OrtSection({ name, guide, ort, lang, onSelect }: {
+  name: string; guide: GuideData; ort: OrtData; lang: 'ro' | 'en'; onSelect: (n: string) => void;
+}) {
+  const { t } = useApp();
+  const idsOf = (n: string) => {
+    const ids = new Set(ORT_EXTRA[n] ?? []);
+    (guide.GUIDE[n] ?? []).forEach((r) => (r.o ?? []).forEach((id) => ids.add(id)));
+    return ort.ORTHO.filter((o) => ids.has(o.id)).map((o) => o.id);
+  };
+  const ids = idsOf(name);
+  if (ids.length === 0) return null;
+  const ref = ort.ORT_BOOK_REF[0];
+  return (
+    <section className="sec ort-sec">
+      <h3>{t('guidesOrtTitle')}</h3>
+      {ids.map((id) => {
+        const o = ort.ORTHO.find((x) => x.id === id)!;
+        const rows = (guide.GUIDE[name] ?? []).filter((r) => (r.o ?? []).includes(id));
+        const sts = guide.GORDER.filter((st) => rows.some((r) => r.st === st));
+        const b = ort.ORT_BOOK[id];
+        const other = Object.keys(guide.GUIDE).filter((p) => p !== name && idsOf(p).includes(id)).sort((a, c) => a.localeCompare(c, 'ro'));
+        return (
+          <details key={id} className="ort-box">
+            <summary>
+              <b>{o.name}</b>{' '}
+              {sts.length
+                ? sts.map((st) => <span key={st} className={`ort-st vg-${st}`}>{guide.GSIGN[st]} {guide.GSTAT[st]}</span>)
+                : <span className="muted small">{t('guidesOrtManual')}</span>}
+            </summary>
+            <div className="ort-body">
+              {guide.GORDER.map((st) => {
+                const it = rows.filter((r) => r.st === st);
+                if (!it.length) return null;
+                return (
+                  <ul key={st} className={`plain rec-rows vg-${st}`} aria-label={guide.GSTAT[st]}>
+                    {it.map((r, i) => {
+                      const ev = EVIDENCE_LABEL[r.ev];
+                      return (
+                        <li key={i} className={`rec-row rec-${st}`}>
+                          <span className={`vsign vsign-${st}`}>{guide.GSIGN[st]}</span> <strong><Rich text={r.l} /></strong>
+                          <div className="muted small">{r.g}{r.src ? ` · ${r.src}` : ''}{r.pg ? ` · ${r.pg}` : ''}{ev ? ` · ${ev[lang]}` : ''}</div>
+                          {r.n && <div className="small"><Rich text={r.n} /></div>}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                );
+              })}
+              {b && (
+                <div className="ort-book">
+                  <h4 className="ort-bt">{t('guidesOrtBook')}</h4>
+                  {b.d && b.d.length > 0 && (
+                    <div className="ort-diff">
+                      <p><b>{t('guidesOrtDiff')}</b></p>
+                      <ul>{b.d.map((x, i) => <li key={i}><Rich text={x} /></li>)}</ul>
+                    </div>
+                  )}
+                  <OrtBlocks blocks={b.b} />
+                  <p className="muted small">{ref}, {b.pg}. {t('guidesOrtNoGrade')}</p>
+                </div>
+              )}
+              {other.length > 0 && (
+                <p className="small">
+                  {t('guidesOrtAlso')}{' '}
+                  {other.map((p, i) => (
+                    <Fragment key={p}>{i > 0 && ', '}<button type="button" className="linkbtn" onClick={() => onSelect(p)}>{p}</button></Fragment>
+                  ))}
+                </p>
+              )}
+            </div>
+          </details>
+        );
+      })}
+      <details className="ort-box">
+        <summary><b>{t('guidesOrtGen')}</b></summary>
+        <div className="ort-body">
+          <OrtBlocks blocks={ort.ORT_GEN} />
+          <p className="muted small">{ref}. {t('guidesOrtNoGrade')}</p>
+        </div>
+      </details>
+    </section>
   );
 }
 
