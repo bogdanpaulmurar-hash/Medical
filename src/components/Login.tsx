@@ -45,7 +45,7 @@ export function Login() {
           ))}
         </div>
         <img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" width={56} height={56} />
-        <h1 className="wordmark">Med<span>Slot</span></h1>
+        <h1 className="wordmark">Vademecum <span>MFR</span></h1>
         <p className="muted">{t('tagline')}</p>
 
         {api.mode === 'demo' ? (
