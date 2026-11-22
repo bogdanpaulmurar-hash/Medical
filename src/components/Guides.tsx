@@ -4,6 +4,7 @@ import {
   EVIDENCE_LABEL, loadDevices, loadGuide, norm,
   type Contra, type DeviceData, type DeviceInfo, type GuideData, type GuideRow, type GuideStatus, type TreeNode,
 } from '../data/vademecum';
+import { ScalesTab } from './Scales';
 import { CATALOG_PROCEDURES } from '../data/catalog';
 
 /** Text cu **îngroșat** și rânduri noi, cum vine din ghiduri. */
@@ -15,7 +16,7 @@ function Rich({ text }: { text: string }) {
   );
 }
 
-type Tab = 'pat' | 'dev';
+type Tab = 'pat' | 'dev' | 'sc';
 
 export function GuidesPage() {
   const { t } = useApp();
@@ -58,9 +59,14 @@ export function GuidesPage() {
         <button role="tab" aria-selected={tab === 'dev'} className={tab === 'dev' ? 'chip on' : 'chip'} onClick={() => setTab('dev')}>
           {t('guidesDevices')}
         </button>
+        <button role="tab" aria-selected={tab === 'sc'} className={tab === 'sc' ? 'chip on' : 'chip'} onClick={() => setTab('sc')}>
+          {t('guidesScales')}
+        </button>
       </div>
       <p className="muted small">{t('guidesSource')}</p>
-      {tab === 'pat' ? (
+      {tab === 'sc' ? (
+        <ScalesTab />
+      ) : tab === 'pat' ? (
         <Pathologies guide={guide} devices={devices} selected={pat} onSelect={setPat} onDevice={openDevice} />
       ) : (
         <Devices guide={guide} devices={devices} selected={dev} onSelect={setDev} onPathology={openPathology} />
