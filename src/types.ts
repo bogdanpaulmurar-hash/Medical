@@ -26,20 +26,64 @@ export interface Cabinet {
   sort_order: number;
 }
 
+/** Aparat sau sală: `capacity` = câți pacienți pot fi deodată. */
+export type Audience = 'all' | 'inpatient' | 'outpatient';
+export const AUDIENCES: Audience[] = ['all', 'inpatient', 'outpatient'];
+
 export interface Room {
   id: string;
   cabinet_id: string;
   name: string;
   active: boolean;
   sort_order: number;
+  capacity: number;
+  audience: Audience;
 }
 
 export interface Procedure {
   id: string;
   name: string;
+  short_name: string;
+  color: string; // #rrggbb
+  room_ids: string[]; // aparatele pe care se poate face (mai multe = capacitate paralelă)
   default_duration: number;
   active: boolean;
   sort_order: number;
+}
+
+export type PatientKind = 'inpatient' | 'outpatient';
+export const PATIENT_KINDS: PatientKind[] = ['inpatient', 'outpatient'];
+export type Frequency = 'daily' | 'alternate' | 'weekly';
+export const FREQUENCIES: Frequency[] = ['daily', 'alternate', 'weekly'];
+
+export interface Patient {
+  id: string;
+  code: string;
+  initials: string;
+  name: string | null;
+  diagnosis: string | null;
+  notes: string | null;
+  kind: PatientKind;
+  doctor_id: string | null;
+  start_date: string; // YYYY-MM-DD
+  active: boolean;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** O procedură din planul unui pacient. */
+export interface PlanItem {
+  id: string;
+  patient_id: string;
+  procedure_id: string;
+  sessions: number;
+  frequency: Frequency;
+  duration: number | null; // null = durata procedurii
+  notes: string | null;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface AppSettings {
@@ -50,6 +94,7 @@ export interface AppSettings {
 
 export interface Appointment {
   id: string;
+  patient_id: string | null;
   patient_code: string;
   patient_initials: string;
   patient_name: string | null;
@@ -59,7 +104,7 @@ export interface Appointment {
   room_id: string;
   starts_at: string; // ISO
   ends_at: string; // ISO
-  attending_id: string;
+  attending_id: string | null;
   receiving_id: string | null;
   status: Status;
   created_by: string | null;
@@ -86,6 +131,6 @@ export interface AuditEntry {
 }
 
 export interface Conflict {
-  kind: 'room' | 'attending' | 'receiving';
+  kind: 'room' | 'attending' | 'receiving' | 'patient';
   appointment: Appointment;
 }

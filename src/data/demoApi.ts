@@ -1,21 +1,24 @@
 import type { Api, AuditFilters, SearchFilters } from './api';
-import { ApiError, findConflicts } from './api';
+import { ApiError, findConflicts, freeRooms } from './api';
 import type {
   AppSettings,
   Appointment,
   AppointmentInput,
   AuditEntry,
   Cabinet,
+  Patient,
+  PlanItem,
   Procedure,
   Profile,
   Room,
 } from '../types';
+import { CATALOG_CATEGORIES, CATALOG_PROCEDURES, CATALOG_ROOMS } from './catalog';
 
 /**
  * MOD DEMO: totul rămâne în localStorage-ul acestui browser.
  * Toate datele sunt FICTIVE. Folosit doar pentru încercarea interfeței.
  */
-const KEY = 'medsched-demo-v3';
+const KEY = 'medsched-demo-v4';
 const SESSION_KEY = 'medsched-demo-session';
 
 interface DB {
@@ -23,6 +26,8 @@ interface DB {
   cabinets: Cabinet[];
   rooms: Room[];
   procedures: Procedure[];
+  patients: Patient[];
+  plan: PlanItem[];
   settings: AppSettings;
   appointments: Appointment[];
   audit: AuditEntry[];
@@ -42,20 +47,20 @@ function seed(): DB {
     p('u-sch', 'programari@exemplu.test', 'Elena Programări', 'scheduler'),
     p('u-rec', 'primitor@exemplu.test', 'Dr. Radu Primitor', 'receiving'),
   ];
-  const cabinets: Cabinet[] = [
-    { id: 'c1', name: 'Cabinet 1', active: true, sort_order: 1 },
-    { id: 'c2', name: 'Cabinet 2', active: true, sort_order: 2 },
-  ];
-  const rooms: Room[] = [
-    { id: 'r1', cabinet_id: 'c1', name: 'Salon A', active: true, sort_order: 1 },
-    { id: 'r2', cabinet_id: 'c1', name: 'Salon B', active: true, sort_order: 2 },
-    { id: 'r3', cabinet_id: 'c2', name: 'Salon C', active: true, sort_order: 1 },
-  ];
-  const procedures: Procedure[] = [
-    { id: 'p1', name: 'Consult', default_duration: 30, active: true, sort_order: 1 },
-    { id: 'p2', name: 'Ecografie', default_duration: 20, active: true, sort_order: 2 },
-    { id: 'p3', name: 'Procedură minoră', default_duration: 60, active: true, sort_order: 3 },
-  ];
+  // Catalogul secției: cabinet = categorie, salon = aparat / sală, procedură cu aparatele ei.
+  const cabinets: Cabinet[] = CATALOG_CATEGORIES.map((c) => ({
+    id: `cab-${c.key}`, name: c.name, active: true, sort_order: c.sort,
+  }));
+  const rooms: Room[] = CATALOG_ROOMS.map((r) => ({
+    id: `room-${r.key}`, cabinet_id: `cab-${r.category}`, name: r.name, active: true, sort_order: r.sort,
+    capacity: r.capacity, audience: r.audience,
+  }));
+  const procedures: Procedure[] = CATALOG_PROCEDURES.map((c) => ({
+    id: `proc-${c.key}`, name: c.name, short_name: c.short, color: c.color, default_duration: c.duration,
+    room_ids: c.rooms.map((k) => `room-${k}`), active: true, sort_order: c.sort,
+  }));
+  const procOf = new Map(procedures.map((x) => [x.id, x]));
+
   const day = new Date();
   day.setHours(0, 0, 0, 0);
   const nowMs = Date.now();
@@ -68,56 +73,95 @@ function seed(): DB {
   const pick = <T,>(arr: T[]): T => arr[Math.floor(rnd() * arr.length)];
   const letters = 'ABCDEFGHIJKLMNOPRSTUVZ';
   const initials = () => `${pick([...letters])}.${pick([...letters])}.`;
-  const roomDoctor: Record<string, string> = { r1: 'u-att1', r2: 'u-att2', r3: 'u-att3' };
-  const durations: Record<string, number> = { p1: 30, p2: 20, p3: 60 };
-  const notesPool = ['Control după 2 săptămâni', 'Pacient anxios', 'Aduce analizele', 'Prima vizită', 'Necesită interpret'];
+  const notesPool = ['Implant metalic genunchi drept', 'Pacient anxios', 'Pacemaker', 'Se deplasează cu cadru', 'Control după 2 săptămâni'];
+  const dxPool = ['Gonartroză', 'Lombalgie', 'AVC, hemipareză', 'Cervicalgie', 'Postoperator șold', 'Omartroză', 'Fasciită plantară'];
+  const isoDay = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const isWork = (d: Date) => d.getDay() !== 0 && d.getDay() !== 6;
+  const nextWork = (d: Date) => {
+    const x = new Date(d);
+    while (!isWork(x)) x.setDate(x.getDate() + 1);
+    return x;
+  };
 
+  // Pacienți fictivi, fiecare cu planul lui.
+  const patients: Patient[] = [];
+  const plan: PlanItem[] = [];
+  const doctors = ['u-att1', 'u-att2', 'u-att3'];
+  const inpatientSets = [['tens', 'ultra', 'kineto'], ['tecar', 'kineto', 'masaj'], ['hil', 'parafina', 'kineto'], ['sis', 'do', 'masaj'], ['swt', 'tens', 'kineto'], ['lokomat', 'stiimp', 'kineto'], ['dsub', 'hidro', 'if']];
+  const outpatientSets = [['rswt', 'ultra'], ['laser2000', 'tens', 'kineto'], ['tecar', 'masaj'], ['if', 'parafina'], ['sis', 'ultra']];
+  for (let i = 0; i < 26; i++) {
+    const kind = i < 16 ? 'inpatient' : 'outpatient';
+    const start = nextWork(new Date(day.getTime() + (Math.floor(rnd() * 44) - 30) * 86400_000));
+    const created = new Date(Math.min(nowMs, start.getTime() - 86400_000)).toISOString();
+    const pt: Patient = {
+      id: uid(), code: `P-${2001 + i}`, initials: initials(), name: null,
+      diagnosis: rnd() < 0.7 ? pick(dxPool) : null, notes: rnd() < 0.2 ? pick(notesPool) : null,
+      kind, doctor_id: pick(doctors), start_date: isoDay(start), active: true,
+      created_by: 'u-att1', created_at: created, updated_at: created,
+    };
+    patients.push(pt);
+    for (const key of pick(kind === 'inpatient' ? inpatientSets : outpatientSets)) {
+      const proc = procOf.get(`proc-${key}`);
+      if (!proc) continue;
+      plan.push({
+        id: uid(), patient_id: pt.id, procedure_id: proc.id, sessions: pick([5, 6, 8, 10, 10]),
+        frequency: 'daily', duration: null, notes: null, active: true, created_at: created, updated_at: created,
+      });
+    }
+  }
+
+  // Programările: câte una pe zi lucrătoare pentru fiecare procedură din plan,
+  // la prima oră liberă (aparat cu loc, pacient liber).
   const appointments: Appointment[] = [];
   const statusFor = (startMs: number, endMs: number): Appointment['status'] => {
     const r = rnd();
-    if (endMs <= nowMs) return r < 0.82 ? 'done' : r < 0.91 ? 'no_show' : 'cancelled';
+    if (endMs <= nowMs) return r < 0.86 ? 'done' : r < 0.93 ? 'no_show' : 'cancelled';
     if (startMs <= nowMs) return 'in_progress';
     const soon = startMs - nowMs < 3 * 86400_000;
-    if (r < 0.05) return 'cancelled';
+    if (r < 0.04) return 'cancelled';
     return r < (soon ? 0.7 : 0.35) ? 'confirmed' : 'planned';
   };
-  // De la acum ~7 săptămâni până peste ~5 săptămâni.
-  for (let off = -49; off <= 35; off++) {
-    const d = new Date(day);
-    d.setDate(d.getDate() + off);
-    const dow = d.getDay();
-    // Ziua de azi și zilele apropiate sunt mai pline; cele îndepărtate, mai rare.
-    const density = off === 0 ? 1 : dow === 0 ? 0.1 : dow === 6 ? 0.25 : off < 0 ? 0.8 : Math.max(0.35, 0.9 - off * 0.02);
-    for (const room of ['r1', 'r2', 'r3']) {
-      let minutes = 8 * 60 + Math.floor(rnd() * 4) * 15;
-      while (minutes < 17 * 60) {
-        const proc = pick(['p1', 'p1', 'p2', 'p3']);
-        const len = durations[proc];
-        if (rnd() < density) {
-          const s0 = new Date(d);
-          s0.setHours(Math.floor(minutes / 60), minutes % 60, 0, 0);
-          const e0 = new Date(s0.getTime() + len * 60_000);
-          const rec = proc === 'p3' && rnd() < 0.6 ? 'u-rec' : null;
-          const status = statusFor(s0.getTime(), e0.getTime());
-          const input = {
-            room_id: room, attending_id: roomDoctor[room], receiving_id: rec, starts_at: s0.toISOString(),
-            ends_at: e0.toISOString(), status,
-          };
-          if (findConflicts(input, appointments, null).length === 0) {
-            const created = new Date(Math.min(nowMs, s0.getTime() - (1 + Math.floor(rnd() * 5)) * 86400_000)).toISOString();
+  const lo = day.getTime() - 49 * 86400_000;
+  const hi = day.getTime() + 35 * 86400_000;
+  patients.forEach((pt, pi) => {
+    const items = plan.filter((x) => x.patient_id === pt.id);
+    let minute = 7 * 60 + 30 + (pi % 13) * 30; // ora preferată a pacientului
+    for (const it of items) {
+      const proc = procOf.get(it.procedure_id)!;
+      const dur = it.duration ?? proc.default_duration;
+      const d = new Date(`${pt.start_date}T00:00:00`);
+      for (let n = 0; n < it.sessions && d.getTime() < hi; ) {
+        if (isWork(d) && d.getTime() >= lo) {
+          // Prima oră (din 15 în 15 minute) la care procedura încape.
+          for (let m = minute; m <= 14 * 60 + 30; m += 15) {
+            const s0 = new Date(d);
+            s0.setHours(Math.floor(m / 60), m % 60, 0, 0);
+            const e0 = new Date(s0.getTime() + dur * 60_000);
+            const room = freeRooms(proc.room_ids, rooms, pt.kind, s0.toISOString(), e0.toISOString(), appointments, null)[0];
+            if (!room) continue;
+            const status = statusFor(s0.getTime(), e0.getTime());
+            const input = {
+              room_id: room.id, attending_id: null, receiving_id: null, patient_id: pt.id,
+              starts_at: s0.toISOString(), ends_at: e0.toISOString(), status,
+            };
+            if (findConflicts(input, appointments, null, rooms).length) continue;
+            const created = new Date(Math.min(nowMs, new Date(`${pt.start_date}T00:00:00`).getTime() - 86400_000)).toISOString();
             appointments.push({
-              id: uid(), patient_code: `D-${1001 + appointments.length}`, patient_initials: initials(),
-              patient_name: null, diagnosis: null, notes: rnd() < 0.12 ? pick(notesPool) : null,
-              procedure_id: proc, room_id: room, starts_at: input.starts_at, ends_at: input.ends_at,
-              attending_id: roomDoctor[room], receiving_id: rec, status,
+              id: uid(), patient_id: pt.id, patient_code: pt.code, patient_initials: pt.initials,
+              patient_name: null, diagnosis: pt.diagnosis, notes: null,
+              procedure_id: proc.id, room_id: room.id, starts_at: input.starts_at, ends_at: input.ends_at,
+              attending_id: null, receiving_id: null, status,
               created_by: 'u-sch', updated_by: 'u-sch', created_at: created, updated_at: created,
             });
+            break;
           }
+          n++;
         }
-        minutes += len + Math.floor(rnd() * 4) * 15; // pauză 0–45 min
+        d.setDate(d.getDate() + 1);
       }
+      minute += 60;
     }
-  }
+  });
   appointments.sort((x, y) => x.starts_at.localeCompare(y.starts_at));
 
   const entry = (id: number, ap: Appointment, action: AuditEntry['action'], by: string, email: string, at: string, oldD: Appointment | null): AuditEntry => ({
@@ -137,17 +181,25 @@ function seed(): DB {
       const at = ap.status === 'confirmed' || new Date(ap.starts_at).getTime() > nowMs
         ? new Date(Math.min(nowMs, new Date(ap.created_at).getTime() + 3600_000)).toISOString()
         : ap.ends_at;
-      const by = ap.status === 'confirmed' ? 'u-sch' : ap.attending_id;
+      const by = ap.status === 'confirmed' ? 'u-sch' : (patients.find((x) => x.id === ap.patient_id)?.doctor_id ?? 'u-sch');
       audit.push(entry(audit.length + 1, ap, 'UPDATE', by, emailOf[by] ?? 'programari@exemplu.test', at, created));
       ap.updated_at = at;
       ap.updated_by = by;
     }
   }
+  // Istoric: pacienții și planurile lor, create de medici.
+  for (const pt of patients) {
+    audit.push({
+      id: 0, table_name: 'patients', record_id: pt.id, action: 'INSERT', changed_by: pt.doctor_id,
+      changed_by_email: emailOf[pt.doctor_id ?? ''] ?? null, changed_at: pt.created_at, old_data: null,
+      new_data: pt as unknown as Record<string, unknown>,
+    });
+  }
   audit.sort((x, y) => x.changed_at.localeCompare(y.changed_at));
   audit.forEach((e, i) => (e.id = i + 1));
   audit.reverse(); // cele mai noi primele
   return {
-    profiles, cabinets, rooms, procedures, appointments, audit,
+    profiles, cabinets, rooms, procedures, patients, plan, appointments, audit,
     settings: { clinic_name: 'Clinica Demo', email_enabled: true, sms_enabled: false },
   };
 }
@@ -157,12 +209,14 @@ export class DemoApi implements Api {
   private db: DB;
   private authListeners = new Set<() => void>();
   private apptListeners = new Set<() => void>();
+  private patientListeners = new Set<() => void>();
 
   constructor() {
     let db: DB | null = null;
     try {
       const raw = localStorage.getItem(KEY);
       if (raw) db = JSON.parse(raw) as DB;
+      if (db && !db.patients) db = null; // date vechi, fără pacienți: refacem demo
     } catch {
       /* ignore */
     }
@@ -264,15 +318,78 @@ export class DemoApi implements Api {
     return [...this.db.rooms].sort((a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name));
   }
   async saveRoom(r: Partial<Room> & { name: string; cabinet_id: string }) {
-    this.upsert('rooms', this.db.rooms, r, { name: r.name, cabinet_id: r.cabinet_id, active: true, sort_order: 0 });
+    this.upsert('rooms', this.db.rooms, r, {
+      name: r.name, cabinet_id: r.cabinet_id, active: true, sort_order: 0, capacity: 1, audience: 'all',
+    });
   }
   async listProcedures() {
     return [...this.db.procedures].sort((a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name));
   }
   async saveProcedure(p: Partial<Procedure> & { name: string }) {
     this.upsert('procedures', this.db.procedures, p, {
-      name: p.name, default_duration: 30, active: true, sort_order: 0,
+      name: p.name, short_name: '', color: '#0f766e', room_ids: [], default_duration: 30, active: true, sort_order: 0,
     });
+  }
+
+  async listPatients() {
+    return [...this.db.patients].sort((a, b) => a.code.localeCompare(b.code));
+  }
+  async savePatient(p: Partial<Patient> & { code: string; initials: string }) {
+    const clash = this.db.patients.find((x) => x.code.toLowerCase() === p.code.toLowerCase() && x.id !== p.id);
+    if (clash) throw new ApiError('other', 'duplicate patient code');
+    const now = new Date().toISOString();
+    let result: Patient;
+    if (p.id) {
+      const i = this.db.patients.findIndex((x) => x.id === p.id);
+      const old = this.db.patients[i];
+      result = { ...old, ...p, updated_at: now };
+      this.db.patients[i] = result;
+      this.audit('patients', old.id, 'UPDATE', old, result);
+    } else {
+      result = {
+        name: null, diagnosis: null, notes: null, kind: 'inpatient', doctor_id: null,
+        start_date: new Date().toISOString().slice(0, 10), active: true, ...p,
+        id: uid(), created_by: this.me(), created_at: now, updated_at: now,
+      };
+      this.db.patients.push(result);
+      this.audit('patients', result.id, 'INSERT', null, result);
+    }
+    this.persist();
+    this.patientListeners.forEach((cb) => cb());
+    return result;
+  }
+  async listPlan() {
+    return [...this.db.plan];
+  }
+  async savePlanItem(i: Partial<PlanItem> & { patient_id: string; procedure_id: string }) {
+    const now = new Date().toISOString();
+    const same = this.db.plan.find((x) => x.patient_id === i.patient_id && x.procedure_id === i.procedure_id);
+    const id = i.id ?? same?.id;
+    let result: PlanItem;
+    if (id) {
+      const k = this.db.plan.findIndex((x) => x.id === id);
+      const old = this.db.plan[k];
+      result = { ...old, ...i, id, updated_at: now };
+      this.db.plan[k] = result;
+      this.audit('patient_plan', id, 'UPDATE', old, result);
+    } else {
+      result = {
+        sessions: 10, frequency: 'daily', duration: null, notes: null, active: true, ...i,
+        id: uid(), created_at: now, updated_at: now,
+      };
+      this.db.plan.push(result);
+      this.audit('patient_plan', result.id, 'INSERT', null, result);
+    }
+    this.persist();
+    this.patientListeners.forEach((cb) => cb());
+    return result;
+  }
+  onPatientsChange(cb: () => void) {
+    this.patientListeners.add(cb);
+    return () => this.patientListeners.delete(cb);
+  }
+  async listPatientAppointments(patientId: string) {
+    return this.db.appointments.filter((a) => a.patient_id === patientId).sort((a, b) => a.starts_at.localeCompare(b.starts_at));
   }
 
   async getSettings() {
@@ -295,10 +412,19 @@ export class DemoApi implements Api {
   }
 
   async saveAppointment(id: string | null, input: AppointmentInput) {
-    const conflicts = findConflicts(input, this.db.appointments, id);
+    if (
+      input.patient_id &&
+      !this.db.plan.some((x) => x.patient_id === input.patient_id && x.procedure_id === input.procedure_id && x.active)
+    ) {
+      throw new ApiError('not_in_plan', 'not in plan');
+    }
+    const conflicts = findConflicts(input, this.db.appointments, id, this.db.rooms);
     if (conflicts.length) {
       const k = conflicts[0].kind;
-      throw new ApiError(k === 'room' ? 'conflict_room' : k === 'attending' ? 'conflict_attending' : 'conflict_receiving', k);
+      throw new ApiError(
+        k === 'room' ? 'conflict_room' : k === 'attending' ? 'conflict_attending' : k === 'patient' ? 'conflict_patient' : 'conflict_receiving',
+        k,
+      );
     }
     const now = new Date().toISOString();
     let result: Appointment;

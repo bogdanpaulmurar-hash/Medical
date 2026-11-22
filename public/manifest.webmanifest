@@ -1,6 +1,6 @@
 {
-  "name": "MedSlot — programări proceduri",
-  "short_name": "MedSlot",
+  "name": "Vademecum MFR — pacienți și programări",
+  "short_name": "Vademecum MFR",
   "description": "Programarea procedurilor medicale / Medical procedure scheduling",
   "start_url": "./",
   "scope": "./",

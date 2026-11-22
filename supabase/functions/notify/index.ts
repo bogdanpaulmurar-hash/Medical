@@ -8,7 +8,7 @@
 // Variabile (supabase secrets set ...):
 //   WEBHOOK_SECRET     – același secret pus în headerul webhook-ului
 //   RESEND_API_KEY     – cheie Resend (sau înlocuiți sendEmail cu SMTP)
-//   MAIL_FROM          – ex. "MedSlot <programari@clinica.ro>"
+//   MAIL_FROM          – ex. "Vademecum MFR <programari@clinica.ro>"
 //   APP_URL            – adresa aplicației, pentru link
 //   SMS_PROVIDER       – "stub" (implicit) sau "twilio"
 import { createClient } from 'npm:@supabase/supabase-js@2';
@@ -76,9 +76,9 @@ Deno.serve(async (req) => {
 
   const sms = getSmsProvider();
   for (const p of people ?? []) {
-    if (settings?.email_enabled && p.notify_email) await sendEmail(p.email, `[MedSlot] ${what}`, text);
+    if (settings?.email_enabled && p.notify_email) await sendEmail(p.email, `[Vademecum MFR] ${what}`, text);
     if (settings?.sms_enabled && p.notify_sms && p.phone) {
-      await sms.send(p.phone, `MedSlot: ${r.patient_code} ${r.patient_initials}, ${proc?.name ?? ''}, ${when}, ${room?.name ?? ''}`);
+      await sms.send(p.phone, `Vademecum MFR: ${r.patient_code} ${r.patient_initials}, ${proc?.name ?? ''}, ${when}, ${room?.name ?? ''}`);
     }
   }
   return new Response('ok');

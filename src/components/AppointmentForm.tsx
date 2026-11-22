@@ -1,19 +1,28 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ApiError, findConflicts } from '../data/api';
+import { ApiError, findConflicts, freeRooms } from '../data/api';
 import { addDays, api, fmtTime, startOfDay, toDateInput, toTimeInput, useApp } from '../state';
 import { statusLabels, type TKey } from '../i18n';
-import { STATUSES, type Appointment, type AppointmentInput, type Status } from '../types';
+import { nextSession } from '../sessions';
+import { STATUSES, type Appointment, type AppointmentInput, type Frequency, type Status } from '../types';
 
 interface Props {
   appointment: Appointment | null;
   defaultDate: Date;
-  defaults?: { start: Date; roomId?: string; attendingId?: string; receivingId?: string };
+  defaults?: {
+    start: Date;
+    roomId?: string;
+    attendingId?: string;
+    receivingId?: string;
+    patientId?: string; // programare pentru un pacient (din fișa lui)
+    procedureId?: string;
+    repeat?: number; // câte ședințe să propună în serie
+  };
   onClose: () => void;
   onSaved: (saved: Appointment) => void;
 }
 
 export function AppointmentForm({ appointment, defaultDate, defaults, onClose, onSaved }: Props) {
-  const { t, prefs, procedures, rooms, cabinets, profiles, me } = useApp();
+  const { t, prefs, procedures, rooms, cabinets, profiles, patients, plan, me } = useApp();
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   const initStart = appointment ? new Date(appointment.starts_at) : defaults ? new Date(defaults.start) : (() => {
@@ -21,32 +30,52 @@ export function AppointmentForm({ appointment, defaultDate, defaults, onClose, o
     d.setHours(9, 0, 0, 0);
     return d;
   })();
+  const startPatient = appointment?.patient_id ?? defaults?.patientId ?? '';
+  const firstProc = (pid: string) => {
+    const items = plan.filter((x) => x.patient_id === pid && x.active);
+    return items.find((x) => x.procedure_id === defaults?.procedureId)?.procedure_id ?? items[0]?.procedure_id ?? '';
+  };
+  const startProcId =
+    appointment?.procedure_id ?? (startPatient ? firstProc(startPatient) : procedures.find((p) => p.active)?.id ?? '');
+  const durationFor = (pid: string, procId: string) => {
+    const item = plan.find((x) => x.patient_id === pid && x.procedure_id === procId && x.active);
+    return item?.duration ?? procedures.find((p) => p.id === procId)?.default_duration ?? 30;
+  };
   const initDuration = appointment
     ? Math.round((new Date(appointment.ends_at).getTime() - initStart.getTime()) / 60000)
-    : procedures.find((p) => p.active)?.default_duration ?? 30;
+    : durationFor(startPatient, startProcId);
 
   const [f, setF] = useState({
-    patient_code: appointment?.patient_code ?? '',
-    patient_initials: appointment?.patient_initials ?? '',
-    patient_name: appointment?.patient_name ?? '',
-    diagnosis: appointment?.diagnosis ?? '',
+    patient_id: startPatient,
+    patient_code: appointment?.patient_code ?? patients.find((p) => p.id === startPatient)?.code ?? '',
+    patient_initials: appointment?.patient_initials ?? patients.find((p) => p.id === startPatient)?.initials ?? '',
+    patient_name: appointment?.patient_name ?? patients.find((p) => p.id === startPatient)?.name ?? '',
+    diagnosis: appointment?.diagnosis ?? patients.find((p) => p.id === startPatient)?.diagnosis ?? '',
     notes: appointment?.notes ?? '',
-    procedure_id: appointment?.procedure_id ?? procedures.find((p) => p.active)?.id ?? '',
-    room_id: appointment?.room_id ?? defaults?.roomId ?? rooms.find((r) => r.active)?.id ?? '',
+    procedure_id: startProcId,
+    room_id: appointment?.room_id ?? defaults?.roomId ?? '',
     date: toDateInput(initStart),
     time: toTimeInput(initStart),
     duration: initDuration,
-    attending_id: appointment?.attending_id ?? defaults?.attendingId ?? (me?.role === 'attending' ? me.id : ''),
+    attending_id: appointment ? (appointment.attending_id ?? '') : defaults?.attendingId ?? (me?.role === 'attending' && !startPatient ? me.id : ''),
     receiving_id: appointment?.receiving_id ?? defaults?.receivingId ?? '',
     status: (appointment?.status ?? 'planned') as Status,
   });
+  const [count, setCount] = useState(defaults?.repeat ?? 1);
+  const [roomTouched, setRoomTouched] = useState(!!appointment || !!defaults?.roomId);
   const [dayItems, setDayItems] = useState<Appointment[]>([]);
+  const [patientAppts, setPatientAppts] = useState<Appointment[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     dialogRef.current?.showModal();
   }, []);
+
+  const patient = patients.find((p) => p.id === f.patient_id) ?? null;
+  const planItem = plan.find((x) => x.patient_id === f.patient_id && x.procedure_id === f.procedure_id && x.active) ?? null;
+  const proc = procedures.find((p) => p.id === f.procedure_id) ?? null;
 
   const start = new Date(`${f.date}T${f.time || '00:00'}`);
   const end = new Date(start.getTime() + Number(f.duration || 0) * 60000);
@@ -58,7 +87,36 @@ export function AppointmentForm({ appointment, defaultDate, defaults, onClose, o
     void api.listAppointments(d0.toISOString(), addDays(d0, 1).toISOString()).then(setDayItems);
   }, [f.date]);
 
+  // Programările pacientului: câte ședințe au rămas la procedura aleasă.
+  useEffect(() => {
+    if (!f.patient_id) return setPatientAppts([]);
+    void api.listPatientAppointments(f.patient_id).then(setPatientAppts);
+  }, [f.patient_id]);
+
+  const booked = patientAppts.filter(
+    (a) => a.procedure_id === f.procedure_id && a.status !== 'cancelled' && a.status !== 'no_show' && a.id !== appointment?.id,
+  ).length;
+  const remaining = planItem ? Math.max(0, planItem.sessions - booked) : 0;
+  useEffect(() => {
+    setCount((c) => Math.max(1, Math.min(c, remaining || 1)));
+  }, [remaining]);
+
+  // Aparatele pe care se poate face procedura (altfel, toate).
+  const procRoomIds = proc && proc.room_ids.length > 0 ? proc.room_ids : rooms.filter((r) => r.active).map((r) => r.id);
+  const startIso = Number.isNaN(start.getTime()) ? '' : start.toISOString();
+  const endIso = Number.isNaN(end.getTime()) ? '' : end.toISOString();
+
+  // Alegere automată a unui aparat liber (dacă utilizatorul nu a ales unul).
+  useEffect(() => {
+    if (roomTouched || !startIso || !endIso) return;
+    const free = freeRooms(procRoomIds, rooms, patient?.kind ?? null, startIso, endIso, dayItems, appointment?.id ?? null);
+    const next = free[0]?.id ?? procRoomIds[0] ?? '';
+    if (next !== f.room_id) setF((o) => ({ ...o, room_id: next }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomTouched, startIso, endIso, f.procedure_id, f.patient_id, dayItems, rooms.length]);
+
   const input: AppointmentInput = {
+    patient_id: f.patient_id || null,
     patient_code: f.patient_code.trim(),
     patient_initials: f.patient_initials.trim().toUpperCase(),
     patient_name: f.patient_name.trim() || null,
@@ -66,28 +124,50 @@ export function AppointmentForm({ appointment, defaultDate, defaults, onClose, o
     notes: f.notes.trim() || null,
     procedure_id: f.procedure_id,
     room_id: f.room_id,
-    starts_at: Number.isNaN(start.getTime()) ? '' : start.toISOString(),
-    ends_at: Number.isNaN(end.getTime()) ? '' : end.toISOString(),
-    attending_id: f.attending_id,
+    starts_at: startIso,
+    ends_at: endIso,
+    attending_id: f.attending_id || null,
     receiving_id: f.receiving_id || null,
     status: f.status,
   };
 
   const conflicts = useMemo(
-    () => (input.starts_at ? findConflicts(input, dayItems, appointment?.id ?? null) : []),
-    [dayItems, input.starts_at, input.ends_at, input.room_id, input.attending_id, input.receiving_id, input.status],
+    () => (input.starts_at && input.room_id ? findConflicts(input, dayItems, appointment?.id ?? null, rooms) : []),
+    [dayItems, rooms, input.starts_at, input.ends_at, input.room_id, input.attending_id, input.receiving_id, input.patient_id, input.status],
   );
 
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((o) => ({ ...o, [k]: v }));
+
+  function pickPatient(id: string) {
+    const pt = patients.find((p) => p.id === id);
+    const procId = id ? firstProc(id) : procedures.find((p) => p.active)?.id ?? '';
+    setRoomTouched(false);
+    setCount(1);
+    setF((o) => ({
+      ...o,
+      patient_id: id,
+      patient_code: pt?.code ?? '',
+      patient_initials: pt?.initials ?? '',
+      patient_name: pt?.name ?? '',
+      diagnosis: pt?.diagnosis ?? '',
+      procedure_id: procId,
+      duration: appointment ? o.duration : durationFor(id, procId),
+    }));
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (conflicts.length) return;
     setBusy(true);
     setError(null);
+    setInfo(null);
     try {
-      const saved = await api.saveAppointment(appointment?.id ?? null, input);
-      onSaved(saved);
+      if (!appointment && f.patient_id && count > 1) {
+        await saveSeries();
+      } else {
+        const saved = await api.saveAppointment(appointment?.id ?? null, input);
+        onSaved(saved);
+      }
     } catch (err) {
       const code = err instanceof ApiError ? err.code : 'other';
       setError(code === 'other' ? t('errorGeneric') : t(code as TKey));
@@ -96,8 +176,53 @@ export function AppointmentForm({ appointment, defaultDate, defaults, onClose, o
     }
   }
 
+  /** O serie de ședințe la aceeași oră, după frecvența din plan; zilele fără loc sunt sărite și raportate. */
+  async function saveSeries() {
+    const freq: Frequency = planItem?.frequency ?? 'daily';
+    const dates: Date[] = [start];
+    while (dates.length < count) dates.push(nextSession(dates[dates.length - 1], freq));
+    const first = startOfDay(dates[0]);
+    const last = addDays(startOfDay(dates[dates.length - 1]), 1);
+    const known = await api.listAppointments(first.toISOString(), last.toISOString());
+    const made: Appointment[] = [];
+    const skipped: string[] = [];
+    for (const d of dates) {
+      const s = new Date(d);
+      const e = new Date(s.getTime() + Number(f.duration) * 60000);
+      const pool = [f.room_id, ...procRoomIds.filter((id) => id !== f.room_id)];
+      let chosen: AppointmentInput | null = null;
+      for (const roomId of pool) {
+        const room = rooms.find((r) => r.id === roomId);
+        if (!room || !room.active) continue;
+        if (roomId !== f.room_id && room.audience !== 'all' && patient && room.audience !== patient.kind) continue;
+        const cand = { ...input, room_id: roomId, starts_at: s.toISOString(), ends_at: e.toISOString() };
+        if (findConflicts(cand, [...known, ...made], null, rooms).length === 0) {
+          chosen = cand;
+          break;
+        }
+      }
+      if (!chosen) {
+        skipped.push(s.toLocaleDateString(prefs.lang === 'ro' ? 'ro-RO' : 'en-GB', { day: 'numeric', month: 'short' }));
+        continue;
+      }
+      made.push(await api.saveAppointment(null, chosen));
+    }
+    if (skipped.length === 0 && made.length > 0) {
+      onSaved(made[0]);
+      return;
+    }
+    setInfo(`${t('seriesDone')}: ${made.length}/${dates.length}`);
+    if (skipped.length) setError(`${t('seriesSkipped')}: ${skipped.join(', ')}`);
+  }
+
   const doctors = profiles.filter((p) => p.active || p.id === f.attending_id || p.id === f.receiving_id);
   const name = (id: string | null) => profiles.find((p) => p.id === id)?.full_name ?? '';
+
+  // Procedurile alese: doar cele din planul pacientului, dacă e ales un pacient.
+  const planProcIds = f.patient_id ? plan.filter((x) => x.patient_id === f.patient_id && x.active).map((x) => x.procedure_id) : null;
+  const procOptions = procedures.filter((p) => (planProcIds ? planProcIds.includes(p.id) || p.id === f.procedure_id : p.active || p.id === f.procedure_id));
+  const patientList = patients.filter((p) => p.active || p.id === f.patient_id);
+  const showCount = !appointment && !!f.patient_id && !!planItem;
 
   return (
     <dialog ref={dialogRef} className="modal" onClose={onClose} aria-labelledby="appt-title">
@@ -109,14 +234,35 @@ export function AppointmentForm({ appointment, defaultDate, defaults, onClose, o
           </button>
         </header>
 
+        <label>
+          {t('patientFromList')}
+          <select value={f.patient_id} onChange={(e) => pickPatient(e.target.value)} disabled={!!appointment?.patient_id}>
+            <option value="">{t('patientFree')}</option>
+            {patientList.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.code} · {p.initials}
+                {p.diagnosis ? ` · ${p.diagnosis}` : ''}
+              </option>
+            ))}
+          </select>
+        </label>
+        {f.patient_id && planProcIds && planProcIds.length === 0 && <p className="alert">{t('planEmptyHint')}</p>}
+
         <div className="grid2">
           <label>
             {t('patientCode')} *
-            <input required maxLength={32} value={f.patient_code} onChange={(e) => set('patient_code', e.target.value)} autoFocus />
+            <input
+              required
+              maxLength={32}
+              value={f.patient_code}
+              onChange={(e) => set('patient_code', e.target.value)}
+              readOnly={!!f.patient_id}
+              autoFocus={!f.patient_id}
+            />
           </label>
           <label>
             {t('patientInitials')} *
-            <input required maxLength={8} value={f.patient_initials} onChange={(e) => set('patient_initials', e.target.value)} />
+            <input required maxLength={8} value={f.patient_initials} onChange={(e) => set('patient_initials', e.target.value)} readOnly={!!f.patient_id} />
           </label>
         </div>
 
@@ -126,20 +272,27 @@ export function AppointmentForm({ appointment, defaultDate, defaults, onClose, o
             required
             value={f.procedure_id}
             onChange={(e) => {
-              const p = procedures.find((x) => x.id === e.target.value);
-              setF((o) => ({ ...o, procedure_id: e.target.value, duration: appointment ? o.duration : p?.default_duration ?? o.duration }));
+              setRoomTouched(!!appointment && e.target.value === appointment.procedure_id);
+              setF((o) => ({
+                ...o,
+                procedure_id: e.target.value,
+                duration: appointment && e.target.value === appointment.procedure_id ? o.duration : durationFor(o.patient_id, e.target.value),
+              }));
             }}
           >
             <option value="" disabled />
-            {procedures
-              .filter((p) => p.active || p.id === f.procedure_id)
-              .map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
+            {procOptions.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
           </select>
         </label>
+        {f.patient_id && planItem && (
+          <p className="muted small">
+            {t('planSessions')}: {booked}/{planItem.sessions} · {t('remaining')}: {remaining}
+          </p>
+        )}
 
         <div className="grid3">
           <label>
@@ -169,29 +322,57 @@ export function AppointmentForm({ appointment, defaultDate, defaults, onClose, o
           </p>
         )}
 
+        {showCount && (
+          <label>
+            {t('seriesCount')}
+            <input
+              type="number"
+              min={1}
+              max={Math.max(1, remaining)}
+              value={count}
+              onChange={(e) => setCount(Math.max(1, Math.min(Math.max(1, remaining), Number(e.target.value) || 1)))}
+            />
+            <span className="muted small">
+              {planItem && t(`freq_${planItem.frequency}` as TKey)}. {t('seriesHint')}
+            </span>
+          </label>
+        )}
+
         <label>
-          {t('room')} *
-          <select required value={f.room_id} onChange={(e) => set('room_id', e.target.value)}>
+          {t('deviceRoom')} *
+          <select
+            required
+            value={f.room_id}
+            onChange={(e) => {
+              setRoomTouched(true);
+              set('room_id', e.target.value);
+            }}
+          >
             <option value="" disabled />
-            {cabinets.map((c) => (
-              <optgroup key={c.id} label={c.name}>
-                {rooms
-                  .filter((r) => r.cabinet_id === c.id && (r.active || r.id === f.room_id))
-                  .map((r) => (
+            {cabinets.map((c) => {
+              const list = rooms.filter(
+                (r) => r.cabinet_id === c.id && ((r.active && procRoomIds.includes(r.id)) || r.id === f.room_id),
+              );
+              if (list.length === 0) return null;
+              return (
+                <optgroup key={c.id} label={c.name}>
+                  {list.map((r) => (
                     <option key={r.id} value={r.id}>
-                      {c.name} / {r.name}
+                      {r.name}
+                      {r.capacity > 1 ? ` · ${r.capacity} ${t('places')}` : ''}
                     </option>
                   ))}
-              </optgroup>
-            ))}
+                </optgroup>
+              );
+            })}
           </select>
         </label>
 
         <div className="grid2">
           <label>
-            {t('attending')} *
-            <select required value={f.attending_id} onChange={(e) => set('attending_id', e.target.value)}>
-              <option value="" disabled />
+            {t('attending')}
+            <select value={f.attending_id} onChange={(e) => set('attending_id', e.target.value)}>
+              <option value="">{t('none')}</option>
               {doctors.map((d) => (
                 <option key={d.id} value={d.id}>
                   {d.full_name || d.email}
@@ -253,6 +434,11 @@ export function AppointmentForm({ appointment, defaultDate, defaults, onClose, o
             </ul>
           </div>
         )}
+        {info && (
+          <div className="ok" role="status">
+            {info}
+          </div>
+        )}
         {error && (
           <div className="alert" role="alert">
             {error}
@@ -268,11 +454,13 @@ export function AppointmentForm({ appointment, defaultDate, defaults, onClose, o
         <footer className="modal-foot">
           <span className="push-right" />
           <button type="button" className="secondary" onClick={onClose}>
-            {t('cancel')}
+            {info ? t('close') : t('cancel')}
           </button>
-          <button type="submit" className="primary" disabled={busy || conflicts.length > 0}>
-            {t('save')}
-          </button>
+          {!info && (
+            <button type="submit" className="primary" disabled={busy || conflicts.length > 0 || (!!f.patient_id && !planItem && !(appointment && f.procedure_id === appointment.procedure_id))}>
+              {t('save')}
+            </button>
+          )}
         </footer>
 
       </form>

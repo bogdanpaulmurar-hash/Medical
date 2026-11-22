@@ -456,3 +456,45 @@ table.occ td { padding: 0; border: 0; }
 .card-item .card-status { width: 100%; margin-top: 0.4rem; min-height: 2rem; padding: 0.15rem 0.4rem; font-size: 0.85rem; }
 
 .ver-pill { font-size: 0.7rem; font-weight: 600; padding: 0.05rem 0.45rem; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); color: var(--muted); }
+
+/* ---------- Pacienți și plan ---------- */
+.patients-layout { display: grid; gap: 1rem; grid-template-columns: 1fr; align-items: start; }
+@media (min-width: 900px) { .patients-layout { grid-template-columns: minmax(16rem, 22rem) 1fr; } }
+.h-inline { margin: 0; font-size: 1.15rem; }
+.push-right { flex: 1; }
+.patients-list { display: grid; gap: 0.6rem; }
+.patient-rows { display: grid; gap: 0.35rem; max-height: 70vh; overflow: auto; }
+.patient-row {
+  display: grid; gap: 0.15rem; width: 100%; text-align: left; background: var(--surface); color: var(--text);
+  border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem 0.65rem;
+}
+.patient-row.on { border-color: var(--accent); background: var(--accent-soft); }
+.patient-chips { display: flex; flex-wrap: wrap; gap: 0.25rem; }
+.patient-detail { display: grid; gap: 1rem; }
+.proc-chip {
+  --c: #0f766e; display: inline-block; font-size: 0.76rem; font-weight: 600; line-height: 1.5; padding: 0 0.5rem;
+  border-radius: 999px; color: #fff; background: var(--c); white-space: nowrap; vertical-align: middle;
+}
+.plan-rows, .slot-rows { display: grid; gap: 0.5rem; margin: 0; padding: 0; }
+.plan-row { display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: space-between; align-items: center; border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem 0.75rem; }
+.plan-main { flex: 1 1 14rem; min-width: 0; }
+.plan-actions { display: flex; gap: 0.4rem; align-items: center; }
+.meter { height: 6px; border-radius: 99px; background: var(--surface-2); margin-top: 0.4rem; overflow: hidden; }
+.meter > span { display: block; height: 100%; border-radius: 99px; }
+.slot-row { display: grid; grid-template-columns: 1fr auto; gap: 0.15rem 0.6rem; align-items: center; border-bottom: 1px solid var(--border); padding: 0.4rem 0; list-style: none; }
+.slot-row.status-cancelled, .slot-row.status-no_show { opacity: 0.55; text-decoration: line-through; }
+@media (min-width: 640px) { .slot-row { grid-template-columns: 12rem auto 1fr auto; } }
+.catalog-pick { max-height: 40vh; overflow: auto; border: 1px solid var(--border); border-radius: 8px; padding: 0.4rem; }
+.catalog-pick h4 { margin: 0.4rem 0 0.2rem; font-size: 0.8rem; color: var(--muted); }
+.pick { display: flex; gap: 0.5rem; align-items: center; width: 100%; text-align: left; background: transparent; color: var(--text); border: 1px solid transparent; border-radius: 6px; padding: 0.3rem 0.4rem; }
+.pick.on { border-color: var(--accent); background: var(--accent-soft); }
+.pick .muted { margin-left: auto; }
+.proc-edit { list-style: none; border-bottom: 1px solid var(--border); padding: 0.4rem 0; }
+.proc-edit .row { gap: 0.4rem; }
+.color-input { width: 2rem; height: 2rem; padding: 0; border: 1px solid var(--border); border-radius: 6px; background: none; flex: 0 0 auto; }
+.inline-edit.short { max-width: 9rem; }
+.inline-select { width: auto; flex: 0 0 auto; }
+.device-pick { border: 1px solid var(--border); border-radius: 8px; margin: 0 0 0.5rem; padding: 0.3rem 0.6rem; display: flex; flex-wrap: wrap; gap: 0.2rem 1rem; }
+.device-pick legend { font-size: 0.8rem; color: var(--muted); padding: 0 0.3rem; }
+.row > input.color-input { flex: 0 0 2.2rem; width: 2.2rem; height: 2.2rem; padding: 0; }
+.row > input.inline-edit.short { flex: 0 1 8rem; }

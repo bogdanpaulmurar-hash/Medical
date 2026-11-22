@@ -1,7 +1,9 @@
 import { createClient, type PostgrestError, type SupabaseClient } from '@supabase/supabase-js';
 import type { Api, AuditFilters, SearchFilters } from './api';
 import { ApiError } from './api';
-import type { AppSettings, Appointment, AppointmentInput, AuditEntry, Cabinet, Procedure, Profile, Room } from '../types';
+import type {
+  AppSettings, Appointment, AppointmentInput, AuditEntry, Cabinet, Patient, PlanItem, Procedure, Profile, Room,
+} from '../types';
 
 function check<T>(res: { data: T; error: PostgrestError | null }): T {
   if (res.error) throw toApiError(res.error);
@@ -15,7 +17,9 @@ function toApiError(e: PostgrestError | Error): ApiError {
     if (msg.includes('no_room_overlap')) return new ApiError('conflict_room', msg);
     if (msg.includes('no_attending_overlap')) return new ApiError('conflict_attending', msg);
     if (msg.includes('no_receiving_overlap')) return new ApiError('conflict_receiving', msg);
+    if (msg.includes('no_patient_overlap')) return new ApiError('conflict_patient', msg);
   }
+  if (/not_in_plan/.test(msg)) return new ApiError('not_in_plan', msg);
   if (code === '42501' || /row-level security|permission denied/i.test(msg)) return new ApiError('forbidden', msg);
   return new ApiError('other', msg);
 }
@@ -80,7 +84,7 @@ export class SupabaseApi implements Api {
   async listRooms() {
     return (check(await this.sb.from('rooms').select('*').order('sort_order').order('name')) ?? []) as Room[];
   }
-  async saveRoom(r: { id?: string; name: string; cabinet_id: string; active?: boolean }) {
+  async saveRoom(r: Partial<Room> & { name: string; cabinet_id: string }) {
     if (r.id) check(await this.sb.from('rooms').update(r).eq('id', r.id));
     else check(await this.sb.from('rooms').insert(r));
   }
@@ -88,9 +92,43 @@ export class SupabaseApi implements Api {
   async listProcedures() {
     return (check(await this.sb.from('procedures').select('*').order('sort_order').order('name')) ?? []) as Procedure[];
   }
-  async saveProcedure(p: { id?: string; name: string; default_duration?: number; active?: boolean }) {
+  async saveProcedure(p: Partial<Procedure> & { name: string }) {
     if (p.id) check(await this.sb.from('procedures').update(p).eq('id', p.id));
     else check(await this.sb.from('procedures').insert(p));
+  }
+
+  async listPatients() {
+    return (check(await this.sb.from('patients').select('*').order('code')) ?? []) as Patient[];
+  }
+  async savePatient(p: Partial<Patient> & { code: string; initials: string }) {
+    const q = p.id
+      ? this.sb.from('patients').update(p).eq('id', p.id).select().single()
+      : this.sb.from('patients').insert(p).select().single();
+    return check(await q) as Patient;
+  }
+  async listPlan() {
+    return (check(await this.sb.from('patient_plan').select('*').order('created_at')) ?? []) as PlanItem[];
+  }
+  async savePlanItem(i: Partial<PlanItem> & { patient_id: string; procedure_id: string }) {
+    const q = i.id
+      ? this.sb.from('patient_plan').update(i).eq('id', i.id).select().single()
+      : this.sb.from('patient_plan').insert(i).select().single();
+    return check(await q) as PlanItem;
+  }
+  onPatientsChange(cb: () => void) {
+    const ch = this.sb
+      .channel('patients-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'patients' }, () => cb())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'patient_plan' }, () => cb())
+      .subscribe();
+    return () => {
+      void this.sb.removeChannel(ch);
+    };
+  }
+  async listPatientAppointments(patientId: string) {
+    return check(
+      await this.sb.from('appointments').select('*').eq('patient_id', patientId).order('starts_at'),
+    ) as Appointment[];
   }
 
   async getSettings() {

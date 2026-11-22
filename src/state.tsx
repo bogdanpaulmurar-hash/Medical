@@ -3,7 +3,7 @@ import type { Api } from './data/api';
 import { DemoApi } from './data/demoApi';
 import { SupabaseApi } from './data/supabaseApi';
 import { dictionaries, type Lang, type TKey } from './i18n';
-import type { AppSettings, Cabinet, Procedure, Profile, Room } from './types';
+import type { AppSettings, Cabinet, Patient, PlanItem, Procedure, Profile, Room } from './types';
 
 // ---------------------------------------------------------------------
 // API: Supabase dacă există configurare, altfel mod demo.
@@ -53,6 +53,8 @@ interface Lookups {
   cabinets: Cabinet[];
   rooms: Room[];
   procedures: Procedure[];
+  patients: Patient[];
+  plan: PlanItem[];
   settings: AppSettings;
 }
 
@@ -71,6 +73,8 @@ const emptyLookups: Lookups = {
   cabinets: [],
   rooms: [],
   procedures: [],
+  patients: [],
+  plan: [],
   settings: { clinic_name: '', email_enabled: true, sms_enabled: false },
 };
 
@@ -94,19 +98,23 @@ export function AppProvider({ userId, children }: { userId: string | null; child
 
   const reloadLookups = useCallback(async () => {
     if (!userId) return;
-    const [profiles, cabinets, rooms, procedures, settings] = await Promise.all([
+    const [profiles, cabinets, rooms, procedures, patients, plan, settings] = await Promise.all([
       api.listProfiles(),
       api.listCabinets(),
       api.listRooms(),
       api.listProcedures(),
+      api.listPatients().catch(() => [] as Patient[]),
+      api.listPlan().catch(() => [] as PlanItem[]),
       api.getSettings().catch(() => emptyLookups.settings),
     ]);
-    setLookups({ profiles, cabinets, rooms, procedures, settings });
+    setLookups({ profiles, cabinets, rooms, procedures, patients, plan, settings });
   }, [userId]);
 
   useEffect(() => {
     void reloadLookups();
-  }, [reloadLookups]);
+    // Pacienții și planurile se schimbă de la mai multe persoane: reîncărcăm la orice modificare.
+    return userId ? api.onPatientsChange(() => void reloadLookups()) : undefined;
+  }, [reloadLookups, userId]);
 
   const value = useMemo<Ctx>(() => {
     const dict = dictionaries[prefs.lang];

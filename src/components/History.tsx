@@ -58,7 +58,7 @@ export function HistoryPage() {
 }
 
 export function AuditList({ recordId, refreshKey, filters }: { recordId?: string; refreshKey?: string; filters?: AuditFilters }) {
-  const { t, prefs, profiles, rooms, cabinets, procedures } = useApp();
+  const { t, prefs, profiles, rooms, cabinets, procedures, patients } = useApp();
   const [entries, setEntries] = useState<AuditEntry[]>([]);
   const [limit, setLimit] = useState(100);
 
@@ -73,12 +73,19 @@ export function AuditList({ recordId, refreshKey, filters }: { recordId?: string
     switch (field) {
       case 'attending_id':
       case 'receiving_id':
+      case 'doctor_id':
         return profiles.find((p) => p.id === s)?.full_name || s.slice(0, 8);
       case 'room_id': {
         const r = rooms.find((x) => x.id === s);
         const c = r && cabinets.find((x) => x.id === r.cabinet_id);
         return r ? `${c?.name ?? ''} / ${r.name}` : s.slice(0, 8);
       }
+      case 'patient_id':
+        return patients.find((x) => x.id === s)?.code ?? s.slice(0, 8);
+      case 'room_ids':
+        return (Array.isArray(v) ? v : [])
+          .map((id) => rooms.find((x) => x.id === id)?.name ?? String(id).slice(0, 8))
+          .join(', ') || '∅';
       case 'cabinet_id':
         return cabinets.find((x) => x.id === s)?.name ?? s.slice(0, 8);
       case 'procedure_id':
@@ -98,6 +105,11 @@ export function AuditList({ recordId, refreshKey, filters }: { recordId?: string
   const label = (e: AuditEntry) => {
     const d = (e.new_data ?? e.old_data ?? {}) as Record<string, unknown>;
     if (e.table_name === 'appointments') return `${d.patient_code ?? ''} ${d.patient_initials ?? ''}`.trim();
+    if (e.table_name === 'patients') return `${d.code ?? ''} ${d.initials ?? ''}`.trim();
+    if (e.table_name === 'patient_plan') {
+      const pt = patients.find((x) => x.id === d.patient_id)?.code ?? '';
+      return `${pt} ${procedures.find((x) => x.id === d.procedure_id)?.name ?? ''}`.trim();
+    }
     return String(d.name ?? d.full_name ?? d.email ?? '');
   };
 
