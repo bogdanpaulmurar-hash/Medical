@@ -49,7 +49,13 @@ export function Schedule() {
   const [group, setGroupState] = useState<Group>(() => stored('medsched-group', ['room', 'attending', 'receiving'] as const, 'room'));
   const [listRange, setListRange] = useState<ListRange>('week');
   const [occDays, setOccDays] = useState<7 | 14 | 28>(7);
-  const [anchor, setAnchor] = useState(() => startOfDay(new Date()));
+  const [anchor, setAnchor] = useState(() => {
+    // Sâmbăta și duminica clinica nu lucrează: se deschide luni.
+    const d = startOfDay(new Date());
+    if (d.getDay() === 6) d.setDate(d.getDate() + 2);
+    else if (d.getDay() === 0) d.setDate(d.getDate() + 1);
+    return d;
+  });
   const [items, setItems] = useState<Appointment[]>([]);
   const [roomFilter, setRoomFilter] = useState('');
   const [doctorFilter, setDoctorFilter] = useState('');
