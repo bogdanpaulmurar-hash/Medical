@@ -20,6 +20,8 @@
 | Pacient identificat prin **cod + inițiale**; nume, diagnostic, note opționale | Patient identified by **code + initials**; name, diagnosis, notes optional |
 | Procedură, dată/oră, durată, cabinet/salon, medic curant, medic primitor, status | Procedure, date/time, duration, office/room, attending, receiving doctor, status |
 | **Verificare conflicte** salon / medic, în timp real în formular și garantată de baza de date | **Conflict check** for room / doctor, live in the form and enforced by the database |
+| Pacienți cu **fișă și plan de proceduri** (medicul îl construiește, persoana de la programări programează doar din plan, medicul vede orele) | Patients with a **record and procedure plan** (the doctor builds it, the scheduler books only from the plan, the doctor sees the hours) |
+| **Aparate cu capacitate** (pacienți simultan), proceduri cu durată, culoare, nume scurt și mai multe aparate posibile; catalogul secției MFR Cluj preîncărcat | **Devices with capacity** (patients at once), procedures with duration, color, short name and several possible devices; the MFR Cluj catalog preloaded |
 | Cabinete, saloane, proceduri editabile din Setări (se dezactivează, nu se șterg) | Offices, rooms, procedures editable in Settings (deactivated, never deleted) |
 | Notificări email; SMS opțional, **dezactivat implicit** (cost per mesaj) | Email notifications; optional SMS, **off by default** (costs per message) |
 | Temă luminoasă / întunecată, mărime text reglabilă, RO / EN | Light / dark theme, adjustable text size, RO / EN |
@@ -84,7 +86,7 @@ Without `.env.local` the app starts in **demo mode**: pick a fake user; data sta
 ### 1. Supabase (baza de date) / Supabase (database)
 
 1. Creați cont pe [supabase.com](https://supabase.com) → **New project** → **Region: Central EU (Frankfurt)**. Notați parola bazei de date.
-2. **SQL Editor** → lipiți și rulați `supabase/migrations/0001_init.sql`.
+2. **SQL Editor** → lipiți și rulați, pe rând, `supabase/migrations/0001_init.sql`, `0002_patients_capacity.sql` și `0003_catalog_mfr.sql` (catalogul de aparate și proceduri; se poate sări peste el dacă vreți un catalog gol).
 3. (Opțional) rulați `supabase/seed.sql` pentru cabinete / saloane / proceduri de început (fictive, le puteți redenumi din Setări).
 4. **Authentication → Providers → Email**: activ. **Authentication → Sign In / Providers**: dezactivați **Allow new users to sign up** (doar invitați).
 5. **Authentication → URL Configuration**: *Site URL* = adresa aplicației (pasul 3), adăugați-o și la *Redirect URLs*.
@@ -176,6 +178,8 @@ src/
   state.tsx             context, preferințe (temă, font, limbă)
 supabase/
   migrations/0001_init.sql   schemă, RLS, audit, conflicte
+  migrations/0002_*.sql      capacitate pe aparat, pacienți, plan de proceduri
+  migrations/0003_*.sql      catalogul de aparate și proceduri al secției
   functions/notify           email + SMS (stub)
   functions/invite-user      invitații (doar admin)
   seed.sql                   nomenclatoare fictive

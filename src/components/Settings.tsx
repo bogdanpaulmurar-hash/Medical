@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ApiError } from '../data/api';
 import { api, useApp, type Theme } from '../state';
 import { roleLabels, type Lang, type TKey } from '../i18n';
-import { ROLES, type Role } from '../types';
+import { AUDIENCES, ROLES, type Audience, type Role } from '../types';
 
 function useAction() {
   const { t, reloadLookups } = useApp();
@@ -169,6 +169,31 @@ function CabinetsRooms() {
                 <li key={r.id} className={r.active ? 'row' : 'row inactive'}>
                   <span className="muted">{t('room')}:</span>
                   <InlineName value={r.name} onSave={(name) => void run(() => api.saveRoom({ id: r.id, name, cabinet_id: c.id }))} />
+                  <label className="inline small" title={t('capacity')}>
+                    <input
+                      type="number"
+                      className="num"
+                      min={1}
+                      max={100}
+                      defaultValue={r.capacity}
+                      onBlur={(e) => {
+                        const v = Number(e.target.value);
+                        if (v >= 1 && v !== r.capacity) void run(() => api.saveRoom({ id: r.id, name: r.name, cabinet_id: c.id, capacity: v }));
+                      }}
+                      aria-label={t('capacity')}
+                    />
+                    {t('places')}
+                  </label>
+                  <select
+                    className="inline-select"
+                    value={r.audience}
+                    aria-label={t('audience')}
+                    onChange={(e) => void run(() => api.saveRoom({ id: r.id, name: r.name, cabinet_id: c.id, audience: e.target.value as Audience }))}
+                  >
+                    {AUDIENCES.map((a) => (
+                      <option key={a} value={a}>{t(`audience_${a}` as TKey)}</option>
+                    ))}
+                  </select>
                   <ActiveToggle
                     active={r.active}
                     onToggle={() => void run(() => api.saveRoom({ id: r.id, name: r.name, cabinet_id: c.id, active: !r.active }))}
@@ -207,34 +232,88 @@ function CabinetsRooms() {
 }
 
 function Procedures() {
-  const { t, procedures } = useApp();
+  const { t, procedures, rooms, cabinets } = useApp();
   const { run, view } = useAction();
   const [name, setName] = useState('');
   const [dur, setDur] = useState(30);
+  const [open, setOpen] = useState<string | null>(null);
+  const roomName = (id: string) => rooms.find((r) => r.id === id)?.name ?? '?';
   return (
     <div className="card">
       <h2>{t('procedures')}</h2>
       <ul className="plain">
         {procedures.map((p) => (
-          <li key={p.id} className={p.active ? 'row' : 'row inactive'}>
-            <InlineName value={p.name} onSave={(n) => void run(() => api.saveProcedure({ id: p.id, name: n }))} />
-            <label className="inline small">
+          <li key={p.id} className={p.active ? 'proc-edit' : 'proc-edit inactive'}>
+            <div className="row">
               <input
-                type="number"
-                className="num"
-                min={5}
-                max={720}
-                step={5}
-                defaultValue={p.default_duration}
-                onBlur={(e) => {
-                  const v = Number(e.target.value);
-                  if (v && v !== p.default_duration) void run(() => api.saveProcedure({ id: p.id, name: p.name, default_duration: v }));
-                }}
-                aria-label={t('defaultDuration')}
+                type="color"
+                className="color-input"
+                value={p.color}
+                aria-label={t('color')}
+                onChange={(e) => void run(() => api.saveProcedure({ id: p.id, name: p.name, color: e.target.value }))}
               />
-              min
-            </label>
-            <ActiveToggle active={p.active} onToggle={() => void run(() => api.saveProcedure({ id: p.id, name: p.name, active: !p.active }))} />
+              <InlineName value={p.name} onSave={(n) => void run(() => api.saveProcedure({ id: p.id, name: n }))} />
+              <input
+                className="inline-edit short"
+                defaultValue={p.short_name}
+                maxLength={24}
+                placeholder={t('shortName')}
+                aria-label={t('shortName')}
+                onBlur={(e) => e.target.value.trim() !== p.short_name && void run(() => api.saveProcedure({ id: p.id, name: p.name, short_name: e.target.value.trim() }))}
+              />
+              <label className="inline small">
+                <input
+                  type="number"
+                  className="num"
+                  min={5}
+                  max={720}
+                  step={5}
+                  defaultValue={p.default_duration}
+                  onBlur={(e) => {
+                    const v = Number(e.target.value);
+                    if (v && v !== p.default_duration) void run(() => api.saveProcedure({ id: p.id, name: p.name, default_duration: v }));
+                  }}
+                  aria-label={t('defaultDuration')}
+                />
+                min
+              </label>
+              <button type="button" className="ghost small" onClick={() => setOpen(open === p.id ? null : p.id)} aria-expanded={open === p.id}>
+                {t('procedureDevices')} ({p.room_ids.length})
+              </button>
+              <ActiveToggle active={p.active} onToggle={() => void run(() => api.saveProcedure({ id: p.id, name: p.name, active: !p.active }))} />
+            </div>
+            {open === p.id && (
+              <div className="nested">
+                {p.room_ids.length === 0 && <p className="muted small">{t('noDevices')}</p>}
+                {cabinets.map((c) => {
+                  const list = rooms.filter((r) => r.cabinet_id === c.id && r.active);
+                  if (!list.length) return null;
+                  return (
+                    <fieldset key={c.id} className="device-pick">
+                      <legend>{c.name}</legend>
+                      {list.map((r) => (
+                        <label key={r.id} className="inline small">
+                          <input
+                            type="checkbox"
+                            checked={p.room_ids.includes(r.id)}
+                            onChange={(e) =>
+                              void run(() =>
+                                api.saveProcedure({
+                                  id: p.id,
+                                  name: p.name,
+                                  room_ids: e.target.checked ? [...p.room_ids, r.id] : p.room_ids.filter((x) => x !== r.id),
+                                }),
+                              )
+                            }
+                          />
+                          {roomName(r.id)} ({r.capacity})
+                        </label>
+                      ))}
+                    </fieldset>
+                  );
+                })}
+              </div>
+            )}
           </li>
         ))}
       </ul>

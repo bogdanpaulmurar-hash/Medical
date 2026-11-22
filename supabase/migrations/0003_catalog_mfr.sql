@@ -1,0 +1,131 @@
+-- =====================================================================
+-- Catalogul de aparate și proceduri al secției (preluat din aplicațiile
+-- medicului: Vademecum MFR 3.0 / Programări MFR 5, lista din 17-19.11.2026).
+--   cabinet = categoria de terapie; salon = aparat sau sală (cu capacitate,
+--   adică pacienți simultan); procedură = ce se programează, cu durată și
+--   aparatele pe care se poate face.
+-- Se poate edita oricând din Setări. Rulează o singură dată; e idempotent.
+-- =====================================================================
+insert into public.cabinets (name, sort_order) values
+  ('Electroterapie', 1),
+  ('Magnetoterapie', 2),
+  ('Ultrasunete, crio-termoterapie și unde de șoc', 3),
+  ('Termoterapie și presoterapie', 4),
+  ('Laserterapie', 5),
+  ('Kinetoterapie și masaj', 6),
+  ('Kinetoterapie cu aparatură specială', 7)
+on conflict (name) do nothing;
+
+insert into public.rooms (cabinet_id, name, sort_order, capacity, audience)
+select cab.id, v.name, v.sort_order, v.capacity, v.audience
+from (values
+  ('Electroterapie', 'Electroterapie internați: medie frecvență (interferențiali)', 1, 4, 'inpatient'),
+  ('Electroterapie', 'Electroterapie internați: joasă frecvență (TENS, diadinamici, Trabert)', 2, 3, 'inpatient'),
+  ('Electroterapie', 'Electroterapie internați: galvanizare, Kowarschik, exponențiali', 3, 1, 'inpatient'),
+  ('Electroterapie', 'Electroterapie ambulatoriu: joasă și medie frecvență', 4, 3, 'outpatient'),
+  ('Electroterapie', 'Băi galvanice', 5, 2, 'all'),
+  ('Electroterapie', 'Unde scurte (câmp condensator)', 6, 1, 'inpatient'),
+  ('Electroterapie', 'Unde scurte (câmp inductiv)', 7, 1, 'outpatient'),
+  ('Electroterapie', 'Diapulse · internați', 8, 1, 'inpatient'),
+  ('Electroterapie', 'Diapulse · ambulatoriu', 9, 1, 'outpatient'),
+  ('Electroterapie', 'TECAR', 10, 1, 'all'),
+  ('Electroterapie', 'Deep Oscillation · internați', 11, 1, 'inpatient'),
+  ('Electroterapie', 'Deep Oscillation · ambulatoriu', 12, 1, 'outpatient'),
+  ('Electroterapie', 'vocaSTIM-Master (VSM3)', 13, 1, 'all'),
+  ('Electroterapie', 'Emface', 14, 1, 'all'),
+  ('Electroterapie', 'EXION', 15, 1, 'all'),
+  ('Magnetoterapie', 'Magnetodiaflux (MDF)', 16, 1, 'all'),
+  ('Magnetoterapie', 'SIS (Super Inductive System) · internați', 17, 1, 'inpatient'),
+  ('Magnetoterapie', 'SIS (Super Inductive System) · ambulatoriu', 18, 1, 'outpatient'),
+  ('Magnetoterapie', 'Emsella', 19, 1, 'all'),
+  ('Magnetoterapie', 'Emsculpt NEO', 20, 1, 'all'),
+  ('Ultrasunete, crio-termoterapie și unde de șoc', 'Crioultrasunete', 21, 1, 'all'),
+  ('Ultrasunete, crio-termoterapie și unde de șoc', 'Ultrasunete · internați', 22, 3, 'inpatient'),
+  ('Ultrasunete, crio-termoterapie și unde de șoc', 'Ultrasunete · ambulatoriu', 23, 1, 'outpatient'),
+  ('Termoterapie și presoterapie', 'Împachetări cu parafină · internați', 24, 5, 'inpatient'),
+  ('Termoterapie și presoterapie', 'Împachetări cu parafină · ambulatoriu', 25, 4, 'outpatient'),
+  ('Termoterapie și presoterapie', 'Drenaj limfatic · internați', 26, 1, 'inpatient'),
+  ('Termoterapie și presoterapie', 'Drenaj limfatic · ambulatoriu', 27, 1, 'outpatient'),
+  ('Ultrasunete, crio-termoterapie și unde de șoc', 'Unde de șoc (focusat)', 28, 1, 'inpatient'),
+  ('Ultrasunete, crio-termoterapie și unde de șoc', 'Unde de șoc radiale', 29, 1, 'outpatient'),
+  ('Laserterapie', 'Laser (HILT)', 30, 1, 'inpatient'),
+  ('Laserterapie', 'Laser (LLLT) · internați', 31, 1, 'inpatient'),
+  ('Laserterapie', 'Laser (LLLT) · ambulatoriu', 32, 1, 'outpatient'),
+  ('Kinetoterapie și masaj', 'Masaj', 33, 1, 'all'),
+  ('Kinetoterapie și masaj', 'Sala kinetoterapie 5E', 34, 9, 'all'),
+  ('Kinetoterapie și masaj', 'Sala kinetoterapie 8E', 35, 5, 'all'),
+  ('Kinetoterapie și masaj', 'Sala kinetoterapie 13E', 36, 3, 'all'),
+  ('Kinetoterapie și masaj', 'Sala kinetoterapie 14E', 37, 10, 'all'),
+  ('Kinetoterapie și masaj', 'Sala kinetoterapie 6F', 38, 5, 'all'),
+  ('Kinetoterapie și masaj', 'Sala kinetoterapie 4F', 39, 5, 'all'),
+  ('Kinetoterapie și masaj', 'Sala kinetoterapie 29F', 40, 5, 'all'),
+  ('Kinetoterapie și masaj', 'Sala kinetoterapie 30F', 41, 5, 'all'),
+  ('Kinetoterapie și masaj', 'Sala kinetoterapie 9E', 42, 3, 'all'),
+  ('Kinetoterapie și masaj', 'Bazin (hidrokinetoterapie)', 43, 8, 'all'),
+  ('Kinetoterapie și masaj', 'Cadă (duș subacval și hidrokinetoterapie)', 44, 1, 'all'),
+  ('Kinetoterapie cu aparatură specială', 'STIIMP', 45, 1, 'all'),
+  ('Kinetoterapie cu aparatură specială', 'VRRS', 46, 1, 'all'),
+  ('Kinetoterapie cu aparatură specială', 'IVS membru superior', 47, 1, 'all'),
+  ('Kinetoterapie cu aparatură specială', 'IVS membru inferior', 48, 1, 'all'),
+  ('Kinetoterapie cu aparatură specială', 'Lokomat', 49, 1, 'all'),
+  ('Kinetoterapie cu aparatură specială', 'Andago', 50, 1, 'all'),
+  ('Kinetoterapie cu aparatură specială', 'ZeroG', 51, 1, 'all'),
+  ('Kinetoterapie cu aparatură specială', 'Armeo Spring Pro', 52, 1, 'all'),
+  ('Kinetoterapie cu aparatură specială', 'Vibramoov', 53, 1, 'all'),
+  ('Kinetoterapie cu aparatură specială', 'Fesia Walk', 54, 1, 'all'),
+  ('Kinetoterapie cu aparatură specială', 'Fesia Grasp', 55, 1, 'all'),
+  ('Kinetoterapie cu aparatură specială', 'Homing Studio', 56, 1, 'all')
+) as v(cabinet, name, sort_order, capacity, audience)
+join public.cabinets cab on cab.name = v.cabinet
+on conflict (cabinet_id, name) do nothing;
+
+insert into public.procedures (name, short_name, color, default_duration, sort_order, room_ids)
+select v.name, v.short_name, v.color, v.duration, v.sort_order,
+       coalesce((select array_agg(r.id order by r.sort_order) from public.rooms r where r.name = any (v.room_names)), '{}')
+from (values
+  ('Galvanizare simplă', 'Galvanizare', '#1e40af', 15, 1, array['Electroterapie internați: galvanizare, Kowarschik, exponențiali', 'Electroterapie ambulatoriu: joasă și medie frecvență']::text[]),
+  ('Băi galvanice', 'Băi galvanice', '#1e40af', 15, 2, array['Băi galvanice']::text[]),
+  ('Curenți exponențiali', 'Exponențiali', '#1e40af', 15, 3, array['Electroterapie internați: galvanizare, Kowarschik, exponențiali', 'Electroterapie ambulatoriu: joasă și medie frecvență']::text[]),
+  ('Galvanizare transversală Kowarschik', 'Kowarschik', '#1e40af', 15, 4, array['Electroterapie internați: galvanizare, Kowarschik, exponențiali', 'Electroterapie ambulatoriu: joasă și medie frecvență']::text[]),
+  ('Trabert', 'Trabert', '#1e40af', 15, 5, array['Electroterapie internați: joasă frecvență (TENS, diadinamici, Trabert)', 'Electroterapie ambulatoriu: joasă și medie frecvență']::text[]),
+  ('Curenți diadinamici', 'Diadinamici', '#1e40af', 15, 6, array['Electroterapie internați: joasă frecvență (TENS, diadinamici, Trabert)', 'Electroterapie ambulatoriu: joasă și medie frecvență']::text[]),
+  ('TENS', 'TENS', '#1e40af', 20, 7, array['Electroterapie internați: joasă frecvență (TENS, diadinamici, Trabert)', 'Electroterapie ambulatoriu: joasă și medie frecvență']::text[]),
+  ('Curenți interferențiali', 'Interferențiali', '#1e40af', 15, 8, array['Electroterapie internați: medie frecvență (interferențiali)', 'Electroterapie ambulatoriu: joasă și medie frecvență']::text[]),
+  ('Unde scurte (câmp condensator)', 'Unde scurte cond.', '#1e40af', 30, 9, array['Unde scurte (câmp condensator)']::text[]),
+  ('Unde scurte (câmp inductiv)', 'Unde scurte ind.', '#1e40af', 30, 10, array['Unde scurte (câmp inductiv)']::text[]),
+  ('Diapulse', 'Diapulse', '#1e40af', 30, 11, array['Diapulse · internați', 'Diapulse · ambulatoriu']::text[]),
+  ('TECAR', 'TECAR', '#1e40af', 20, 12, array['TECAR']::text[]),
+  ('Deep Oscillation', 'Deep Osc.', '#1e40af', 20, 13, array['Deep Oscillation · internați', 'Deep Oscillation · ambulatoriu']::text[]),
+  ('vocaSTIM-Master (VSM3)', 'vocaSTIM', '#1e40af', 30, 14, array['vocaSTIM-Master (VSM3)']::text[]),
+  ('Emface', 'Emface', '#1e40af', 30, 15, array['Emface']::text[]),
+  ('EXION', 'EXION', '#1e40af', 30, 16, array['EXION']::text[]),
+  ('Magnetodiaflux (MDF)', 'MDF', '#6d28d9', 30, 17, array['Magnetodiaflux (MDF)']::text[]),
+  ('SIS (Super Inductive System)', 'SIS', '#6d28d9', 30, 18, array['SIS (Super Inductive System) · internați', 'SIS (Super Inductive System) · ambulatoriu']::text[]),
+  ('Emsella', 'Emsella', '#6d28d9', 30, 19, array['Emsella']::text[]),
+  ('Emsculpt NEO', 'Emsculpt', '#6d28d9', 30, 20, array['Emsculpt NEO']::text[]),
+  ('Crioultrasunete', 'Crio / US', '#0f5e63', 30, 21, array['Crioultrasunete']::text[]),
+  ('Ultrasunete', 'Ultrasunete', '#0f5e63', 10, 22, array['Ultrasunete · internați', 'Ultrasunete · ambulatoriu']::text[]),
+  ('Împachetări cu parafină', 'Parafină', '#c2410c', 30, 23, array['Împachetări cu parafină · internați', 'Împachetări cu parafină · ambulatoriu']::text[]),
+  ('Drenaj limfatic', 'Drenaj limfatic', '#c2410c', 30, 24, array['Drenaj limfatic · internați', 'Drenaj limfatic · ambulatoriu']::text[]),
+  ('Unde de șoc (focusat)', 'Unde de șoc', '#0f5e63', 30, 25, array['Unde de șoc (focusat)']::text[]),
+  ('Unde de șoc radiale', 'Unde radiale', '#0f5e63', 10, 26, array['Unde de șoc radiale']::text[]),
+  ('Laser (HILT)', 'Laser HILT', '#7a4a00', 10, 27, array['Laser (HILT)']::text[]),
+  ('Laser (LLLT)', 'Laser LLLT', '#7a4a00', 10, 28, array['Laser (LLLT) · internați', 'Laser (LLLT) · ambulatoriu']::text[]),
+  ('Masaj', 'Masaj', '#166534', 20, 29, array['Masaj']::text[]),
+  ('Kinetoterapie', 'Kineto', '#166534', 30, 30, array['Sala kinetoterapie 5E', 'Sala kinetoterapie 8E', 'Sala kinetoterapie 13E', 'Sala kinetoterapie 14E', 'Sala kinetoterapie 6F', 'Sala kinetoterapie 4F', 'Sala kinetoterapie 29F', 'Sala kinetoterapie 30F', 'Sala kinetoterapie 9E']::text[]),
+  ('Hidrokinetoterapie', 'Hidrokineto', '#166534', 30, 31, array['Bazin (hidrokinetoterapie)', 'Cadă (duș subacval și hidrokinetoterapie)']::text[]),
+  ('Duș subacval', 'Duș subacval', '#166534', 60, 32, array['Cadă (duș subacval și hidrokinetoterapie)']::text[]),
+  ('STIIMP', 'STIIMP', '#be185d', 20, 33, array['STIIMP']::text[]),
+  ('VRRS', 'VRRS', '#be185d', 30, 34, array['VRRS']::text[]),
+  ('IVS membru superior', 'IVS MS', '#be185d', 30, 35, array['IVS membru superior']::text[]),
+  ('IVS membru inferior', 'IVS MI', '#be185d', 30, 36, array['IVS membru inferior']::text[]),
+  ('Lokomat', 'Lokomat', '#be185d', 60, 37, array['Lokomat']::text[]),
+  ('Andago', 'Andago', '#be185d', 30, 38, array['Andago']::text[]),
+  ('ZeroG', 'ZeroG', '#be185d', 30, 39, array['ZeroG']::text[]),
+  ('Armeo Spring Pro', 'Armeo', '#be185d', 30, 40, array['Armeo Spring Pro']::text[]),
+  ('Vibramoov', 'Vibramoov', '#be185d', 30, 41, array['Vibramoov']::text[]),
+  ('Fesia Walk', 'Fesia Walk', '#be185d', 20, 42, array['Fesia Walk']::text[]),
+  ('Fesia Grasp', 'Fesia Grasp', '#be185d', 20, 43, array['Fesia Grasp']::text[]),
+  ('Homing Studio', 'Homing', '#be185d', 30, 44, array['Homing Studio']::text[])
+) as v(name, short_name, color, duration, sort_order, room_names)
+on conflict (name) do nothing;

@@ -6,9 +6,10 @@ import { HistoryPage } from './components/History';
 import { SettingsPage } from './components/Settings';
 import { Help } from './components/Help';
 import { SearchPage } from './components/Search';
+import { PatientsPage } from './components/Patients';
 import { DemoApi } from './data/demoApi';
 
-type Page = 'schedule' | 'search' | 'history' | 'settings' | 'help';
+type Page = 'schedule' | 'patients' | 'search' | 'history' | 'settings' | 'help';
 
 export default function App() {
   const [userId, setUserId] = useState<string | null | undefined>(undefined);
@@ -29,7 +30,7 @@ export default function App() {
 
 function pageFromHash(): Page {
   const h = window.location.hash.replace('#', '');
-  return (['schedule', 'search', 'history', 'settings', 'help'] as Page[]).includes(h as Page) ? (h as Page) : 'schedule';
+  return (['schedule', 'patients', 'search', 'history', 'settings', 'help'] as Page[]).includes(h as Page) ? (h as Page) : 'schedule';
 }
 
 function Shell() {
@@ -56,6 +57,7 @@ function Shell() {
 
   const nav: { id: Page; label: string }[] = [
     { id: 'schedule', label: t('navSchedule') },
+    { id: 'patients', label: t('navPatients') },
     { id: 'search', label: t('navSearch') },
     { id: 'history', label: t('navHistory') },
     { id: 'settings', label: t('navSettings') },
@@ -101,6 +103,7 @@ function Shell() {
       </header>
       <main className="page">
         {page === 'schedule' && <Schedule />}
+        {page === 'patients' && <PatientsPage />}
         {page === 'search' && <SearchPage />}
         {page === 'history' && <HistoryPage />}
         {page === 'settings' && <SettingsPage />}

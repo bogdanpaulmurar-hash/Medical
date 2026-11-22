@@ -10,6 +10,7 @@ import { STATUSES, type Appointment, type Status } from '../types';
 import { AppointmentDetail } from './AppointmentDetail';
 import { AppointmentForm } from './AppointmentForm';
 import { MonthGrid } from './MonthGrid';
+import { hexHue } from '../colors';
 import { TimeGrid, type BlockInfo, type GridCol } from './TimeGrid';
 
 type View = 'timeline' | 'week' | 'month' | 'list' | 'occupancy' | 'board';
@@ -43,7 +44,7 @@ function remember(key: string, value: string) {
 }
 
 export function Schedule() {
-  const { t, prefs, rooms, cabinets, procedures, profiles } = useApp();
+  const { t, prefs, rooms, cabinets, procedures, profiles, patients } = useApp();
   const [view, setViewState] = useState<View>(() => stored('medsched-view', VIEWS, window.innerWidth < 700 ? 'timeline' : 'week'));
   const [group, setGroupState] = useState<Group>(() => stored('medsched-group', ['room', 'attending', 'receiving'] as const, 'room'));
   const [listRange, setListRange] = useState<ListRange>('week');
@@ -107,28 +108,34 @@ export function Schedule() {
       cab: new Map(cabinets.map((c) => [c.id, c])),
       proc: new Map(procedures.map((p) => [p.id, p])),
       prof: new Map(profiles.map((p) => [p.id, p])),
+      pat: new Map(patients.map((p) => [p.id, p])),
       hue: new Map(orderedRooms.map((r, i) => [r.id, HUES[i % HUES.length]])),
     }),
-    [rooms, cabinets, procedures, profiles, orderedRooms],
+    [rooms, cabinets, procedures, profiles, patients, orderedRooms],
   );
 
   const describe = useCallback(
     (a: Appointment): BlockInfo => {
       const room = lookups.room.get(a.room_id);
+      const proc = lookups.proc.get(a.procedure_id);
       return {
-        proc: lookups.proc.get(a.procedure_id)?.name ?? '?',
+        proc: proc?.short_name || proc?.name || '?',
         patient: `${a.patient_code} · ${a.patient_initials}`,
         room: room ? `${lookups.cab.get(room.cabinet_id)?.name ?? ''} / ${room.name}` : '',
-        hue: lookups.hue.get(a.room_id) ?? HUES[0],
+        hue: proc ? hexHue(proc.color, lookups.hue.get(a.room_id) ?? HUES[0]) : (lookups.hue.get(a.room_id) ?? HUES[0]),
       };
     },
     [lookups],
   );
 
   const dead = (a: Appointment) => a.status === 'cancelled' || a.status === 'no_show';
-  const matches = (a: Appointment) =>
-    (!roomFilter || a.room_id === roomFilter) &&
-    (!doctorFilter || a.attending_id === doctorFilter || a.receiving_id === doctorFilter);
+  // Medicul unei programări: cel ales la programare sau medicul pacientului din fișă.
+  const doctorMatch = (a: Appointment) =>
+    !doctorFilter ||
+    a.attending_id === doctorFilter ||
+    a.receiving_id === doctorFilter ||
+    (a.patient_id ? lookups.pat.get(a.patient_id)?.doctor_id === doctorFilter : false);
+  const matches = (a: Appointment) => (!roomFilter || a.room_id === roomFilter) && doctorMatch(a);
   const filtered = items.filter((a) => (showCancelled || !dead(a)) && matches(a));
 
   const today = startOfDay(new Date());
@@ -139,20 +146,25 @@ export function Schedule() {
       const isToday = sameDay(anchor, today);
       if (group === 'room') {
         const used = new Set(filtered.map((a) => a.room_id));
+        // Cu multe aparate, în ziua curentă arătăm doar coloanele cu programări (sau aparatul ales).
+        const crowded = orderedRooms.length > 12 && !roomFilter;
         return orderedRooms
-          .filter((r) => (r.active || used.has(r.id)) && (!roomFilter || r.id === roomFilter))
+          .filter((r) => (crowded ? used.has(r.id) : r.active || used.has(r.id)) && (!roomFilter || r.id === roomFilter))
           .map((r) => ({
             key: r.id, title: r.name, sub: lookups.cab.get(r.cabinet_id)?.name, date: anchor, roomId: r.id,
             today: isToday, items: filtered.filter((a) => a.room_id === r.id),
           }));
       }
       const field = group === 'attending' ? 'attending_id' : 'receiving_id';
-      const used = new Set(filtered.map((a) => a[field]));
+      // La „medic curant”, programările fără medic ales merg la medicul pacientului.
+      const docOf = (a: Appointment) =>
+        a[field] ?? (group === 'attending' && a.patient_id ? lookups.pat.get(a.patient_id)?.doctor_id ?? null : null);
+      const used = new Set(filtered.map(docOf));
       return profiles
         .filter((p) => p.role !== 'scheduler' && (p.active || used.has(p.id)) && (!doctorFilter || p.id === doctorFilter))
         .map((p) => ({
           key: p.id, title: p.full_name || p.email, sub: roleLabels[prefs.lang][p.role], date: anchor, personId: p.id,
-          roomId: roomFilter || undefined, today: isToday, items: filtered.filter((a) => a[field] === p.id),
+          roomId: roomFilter || undefined, today: isToday, items: filtered.filter((a) => docOf(a) === p.id),
         }));
     }
     return Array.from({ length: 7 }, (_, i) => {
@@ -206,7 +218,7 @@ export function Schedule() {
   // --- Ocupare: saloane × zile ---
   const occupancy = useMemo(() => {
     if (view !== 'occupancy') return null;
-    const live = items.filter((a) => !dead(a) && (!doctorFilter || a.attending_id === doctorFilter || a.receiving_id === doctorFilter));
+    const live = items.filter((a) => !dead(a) && doctorMatch(a));
     const used = new Set(live.map((a) => a.room_id));
     const roomRows = orderedRooms.filter((r) => (r.active || used.has(r.id)) && (!roomFilter || r.id === roomFilter));
     return roomRows.map((r) => ({
@@ -308,7 +320,7 @@ export function Schedule() {
 
       {(view === 'timeline' || view === 'week') &&
         (cols.length === 0 ? (
-          <p className="muted">{t('noRoomsToShow')}</p>
+          <p className="muted">{rooms.length > 0 ? t('noAppointments') : t('noRoomsToShow')}</p>
         ) : (
           <>
             <TimeGrid
@@ -352,7 +364,7 @@ export function Schedule() {
                 <ul className="appt-list">
                   {dayItems.map((a) => {
                     const info = describe(a);
-                    const att = lookups.prof.get(a.attending_id);
+                    const att = a.attending_id ? lookups.prof.get(a.attending_id) : (a.patient_id ? lookups.prof.get(lookups.pat.get(a.patient_id)?.doctor_id ?? '') : undefined);
                     const rec = a.receiving_id ? lookups.prof.get(a.receiving_id) : null;
                     return (
                       <li key={a.id}>

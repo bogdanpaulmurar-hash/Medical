@@ -1,5 +1,5 @@
 -- Simulează schema auth din Supabase pentru teste locale pe Postgres simplu.
--- Ordine: auth_stub.sql → ../migrations/0001_init.sql → ../seed.sql (opțional) → behaviour.sql
+-- Ordine: auth_stub.sql → ../migrations/0001_init.sql, 0002, 0003 → behaviour.sql → capacity.sql
 create role authenticated; create role anon;
 create schema auth;
 create table auth.users (id uuid primary key default gen_random_uuid(), email text, raw_user_meta_data jsonb default '{}');
