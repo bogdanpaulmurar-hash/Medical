@@ -534,6 +534,25 @@ export class DemoApi implements Api {
     return { rows: all.slice(offset, offset + limit), total: all.length };
   }
 
+  /** Doar în demo: câte date fictive există. */
+  counts() {
+    return {
+      patients: this.db.patients.length, plan: this.db.plan.length, appointments: this.db.appointments.length,
+      documents: (this.db.documents ?? []).length, history: this.db.audit.length,
+    };
+  }
+
+  /** Doar în demo: șterge datele fictive (pacienți, planuri, programări, documente, istoric); catalogul și setările rămân. */
+  clearTestData() {
+    this.requireAdmin();
+    this.db.patients = [];
+    this.db.plan = [];
+    this.db.appointments = [];
+    this.db.documents = [];
+    this.db.audit = [];
+    this.persist();
+  }
+
   /** Doar în demo: resetează datele fictive. */
   reset() {
     this.db = seed();

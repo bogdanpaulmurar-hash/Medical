@@ -1,3 +1,4 @@
+import { ProductionWizard } from './Wizard';
 import { useState } from 'react';
 import { ApiError } from '../data/api';
 import { api, useApp, type Theme } from '../state';
@@ -28,6 +29,7 @@ export function SettingsPage() {
   return (
     <section className="settings">
       <h1>{t('settingsTitle')}</h1>
+      <ProductionWizard />
       <Personal />
       <MyNotifications />
       <CabinetsRooms />
