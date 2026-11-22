@@ -3,15 +3,17 @@ import { fmtDateTime, fmtTime, locale, useApp } from '../state';
 import { statusLabels } from '../i18n';
 import type { Appointment } from '../types';
 import { AuditList } from './History';
+import { StatusPicker } from './StatusPicker';
 
 interface Props {
   appointment: Appointment;
   onClose: () => void;
   onEdit: () => void;
+  onStatusChanged?: (saved: Appointment) => void;
 }
 
 /** Vizualizare doar-citire. Modificarea se face doar apăsând „Editează”. */
-export function AppointmentDetail({ appointment: a, onClose, onEdit }: Props) {
+export function AppointmentDetail({ appointment: a, onClose, onEdit, onStatusChanged }: Props) {
   const { t, prefs, procedures, rooms, cabinets, profiles } = useApp();
   const ref = useRef<HTMLDialogElement>(null);
 
@@ -56,6 +58,8 @@ export function AppointmentDetail({ appointment: a, onClose, onEdit }: Props) {
             {fmtTime(a.starts_at, prefs.lang)}–{fmtTime(a.ends_at, prefs.lang)} · {minutes} {t('minutesShort')}
           </span>
         </div>
+
+        <StatusPicker appointment={a} onChanged={onStatusChanged} />
 
         <dl className="kvs">
           <Row label={t('patient')}>
