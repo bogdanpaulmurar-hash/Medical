@@ -82,6 +82,7 @@ function Shell() {
         <div className="brand">
           <img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" width={28} height={28} />
           <span>{t('appName')}</span>
+          <span className="ver-pill" title={__APP_VERSION__}>v{__APP_RELEASE__}</span>
           {settings.clinic_name && <span className="muted small clinic">{settings.clinic_name}</span>}
         </div>
         <nav aria-label="main">
