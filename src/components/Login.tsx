@@ -31,6 +31,8 @@ export function Login() {
   }
 
   return (
+    <>
+    {api.mode === 'demo' && <div className="demo-banner" role="note">{t('demoBanner')}</div>}
     <main className="center-card">
       <div className="card login">
         <div className="lang-switch">
@@ -76,5 +78,6 @@ export function Login() {
         </p>
       </div>
     </main>
+    </>
   );
 }

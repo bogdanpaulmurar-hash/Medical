@@ -15,7 +15,7 @@ import type {
  * MOD DEMO: totul rămâne în localStorage-ul acestui browser.
  * Toate datele sunt FICTIVE. Folosit doar pentru încercarea interfeței.
  */
-const KEY = 'medsched-demo-v2';
+const KEY = 'medsched-demo-v3';
 const SESSION_KEY = 'medsched-demo-session';
 
 interface DB {
@@ -38,6 +38,7 @@ function seed(): DB {
     p('u-admin', 'admin@exemplu.test', 'Dr. Ana Demo (admin)', 'admin'),
     p('u-att1', 'curant1@exemplu.test', 'Dr. Mihai Curant', 'attending'),
     p('u-att2', 'curant2@exemplu.test', 'Dr. Ioana Curant', 'attending'),
+    p('u-att3', 'curant3@exemplu.test', 'Dr. Vlad Curant', 'attending'),
     p('u-sch', 'programari@exemplu.test', 'Elena Programări', 'scheduler'),
     p('u-rec', 'primitor@exemplu.test', 'Dr. Radu Primitor', 'receiving'),
   ];
@@ -57,52 +58,93 @@ function seed(): DB {
   ];
   const day = new Date();
   day.setHours(0, 0, 0, 0);
-  const at = (h: number, m: number, dayOffset = 0) => {
-    const d = new Date(day);
-    d.setDate(d.getDate() + dayOffset);
-    d.setHours(h, m);
-    return d.toISOString();
+  const nowMs = Date.now();
+  // Generator pseudo-aleator cu sămânță fixă: aceleași date la fiecare resetare.
+  let seedN = 20261122;
+  const rnd = () => {
+    seedN = (seedN * 1664525 + 1013904223) % 4294967296;
+    return seedN / 4294967296;
   };
-  const now = new Date().toISOString();
-  const a = (
-    code: string, ini: string, proc: string, room: string, s: string, e: string, att: string,
-    rec: string | null, status: Appointment['status'],
-  ): Appointment => ({
-    id: uid(), patient_code: code, patient_initials: ini, patient_name: null, diagnosis: null, notes: null,
-    procedure_id: proc, room_id: room, starts_at: s, ends_at: e, attending_id: att, receiving_id: rec, status,
-    created_by: 'u-sch', updated_by: 'u-sch', created_at: now, updated_at: now,
-  });
-  const appointments = [
-    a('D-1001', 'A.B.', 'p1', 'r1', at(9, 0), at(9, 30), 'u-att1', null, 'confirmed'),
-    a('D-1002', 'C.D.', 'p3', 'r2', at(10, 0), at(11, 0), 'u-att1', 'u-rec', 'planned'),
-    a('D-1003', 'E.F.', 'p2', 'r3', at(10, 30), at(10, 50), 'u-att2', null, 'planned'),
-    a('D-1004', 'G.H.', 'p1', 'r1', at(12, 0), at(12, 30), 'u-att2', null, 'cancelled'),
-    a('D-1005', 'I.J.', 'p3', 'r1', at(9, 0, 1), at(10, 0, 1), 'u-att1', 'u-rec', 'planned'),
-    a('D-1006', 'K.L.', 'p2', 'r2', at(9, 15), at(9, 35), 'u-att2', null, 'in_progress'),
-    a('D-1007', 'M.N.', 'p1', 'r3', at(11, 30), at(12, 0), 'u-att1', null, 'planned'),
-    a('D-1008', 'O.P.', 'p3', 'r1', at(13, 0), at(14, 0), 'u-att2', 'u-rec', 'confirmed'),
-    a('D-1009', 'Q.R.', 'p1', 'r2', at(14, 30), at(15, 0), 'u-att1', null, 'planned'),
-    a('D-1010', 'S.T.', 'p2', 'r3', at(9, 0, 2), at(9, 20, 2), 'u-att2', null, 'planned'),
-  ];
-  appointments[0].notes = 'Control după 2 săptămâni';
+  const pick = <T,>(arr: T[]): T => arr[Math.floor(rnd() * arr.length)];
+  const letters = 'ABCDEFGHIJKLMNOPRSTUVZ';
+  const initials = () => `${pick([...letters])}.${pick([...letters])}.`;
+  const roomDoctor: Record<string, string> = { r1: 'u-att1', r2: 'u-att2', r3: 'u-att3' };
+  const durations: Record<string, number> = { p1: 30, p2: 20, p3: 60 };
+  const notesPool = ['Control după 2 săptămâni', 'Pacient anxios', 'Aduce analizele', 'Prima vizită', 'Necesită interpret'];
+
+  const appointments: Appointment[] = [];
+  const statusFor = (startMs: number, endMs: number): Appointment['status'] => {
+    const r = rnd();
+    if (endMs <= nowMs) return r < 0.82 ? 'done' : r < 0.91 ? 'no_show' : 'cancelled';
+    if (startMs <= nowMs) return 'in_progress';
+    const soon = startMs - nowMs < 3 * 86400_000;
+    if (r < 0.05) return 'cancelled';
+    return r < (soon ? 0.7 : 0.35) ? 'confirmed' : 'planned';
+  };
+  // De la acum ~7 săptămâni până peste ~5 săptămâni.
+  for (let off = -49; off <= 35; off++) {
+    const d = new Date(day);
+    d.setDate(d.getDate() + off);
+    const dow = d.getDay();
+    // Ziua de azi și zilele apropiate sunt mai pline; cele îndepărtate, mai rare.
+    const density = off === 0 ? 1 : dow === 0 ? 0.1 : dow === 6 ? 0.25 : off < 0 ? 0.8 : Math.max(0.35, 0.9 - off * 0.02);
+    for (const room of ['r1', 'r2', 'r3']) {
+      let minutes = 8 * 60 + Math.floor(rnd() * 4) * 15;
+      while (minutes < 17 * 60) {
+        const proc = pick(['p1', 'p1', 'p2', 'p3']);
+        const len = durations[proc];
+        if (rnd() < density) {
+          const s0 = new Date(d);
+          s0.setHours(Math.floor(minutes / 60), minutes % 60, 0, 0);
+          const e0 = new Date(s0.getTime() + len * 60_000);
+          const rec = proc === 'p3' && rnd() < 0.6 ? 'u-rec' : null;
+          const status = statusFor(s0.getTime(), e0.getTime());
+          const input = {
+            room_id: room, attending_id: roomDoctor[room], receiving_id: rec, starts_at: s0.toISOString(),
+            ends_at: e0.toISOString(), status,
+          };
+          if (findConflicts(input, appointments, null).length === 0) {
+            const created = new Date(Math.min(nowMs, s0.getTime() - (1 + Math.floor(rnd() * 5)) * 86400_000)).toISOString();
+            appointments.push({
+              id: uid(), patient_code: `D-${1001 + appointments.length}`, patient_initials: initials(),
+              patient_name: null, diagnosis: null, notes: rnd() < 0.12 ? pick(notesPool) : null,
+              procedure_id: proc, room_id: room, starts_at: input.starts_at, ends_at: input.ends_at,
+              attending_id: roomDoctor[room], receiving_id: rec, status,
+              created_by: 'u-sch', updated_by: 'u-sch', created_at: created, updated_at: created,
+            });
+          }
+        }
+        minutes += len + Math.floor(rnd() * 4) * 15; // pauză 0–45 min
+      }
+    }
+  }
+  appointments.sort((x, y) => x.starts_at.localeCompare(y.starts_at));
+
   const entry = (id: number, ap: Appointment, action: AuditEntry['action'], by: string, email: string, at: string, oldD: Appointment | null): AuditEntry => ({
     id, table_name: 'appointments', record_id: ap.id, action, changed_by: by, changed_by_email: email,
     changed_at: at, old_data: oldD as unknown as Record<string, unknown> | null,
     new_data: ap as unknown as Record<string, unknown>,
   });
-  const hoursAgo = (h: number) => new Date(Date.now() - h * 3600_000).toISOString();
-  const audit: AuditEntry[] = appointments.map((ap, i) =>
-    entry(i + 1, ap, 'INSERT', 'u-sch', 'programari@exemplu.test', hoursAgo(30 - i), null),
-  );
-  // Exemplu de istoric cu mai multe modificări pentru prima programare.
-  const first = appointments[0];
-  const v0 = { ...first, status: 'planned' as const, notes: null, updated_at: hoursAgo(30) };
-  const v1 = { ...first, status: 'confirmed' as const, notes: null, updated_at: hoursAgo(5) };
-  audit.push(entry(audit.length + 1, v1, 'UPDATE', 'u-att1', 'curant1@exemplu.test', hoursAgo(5), v0));
-  audit.push(entry(audit.length + 1, first, 'UPDATE', 'u-sch', 'programari@exemplu.test', hoursAgo(1), v1));
-  first.status = 'confirmed';
-  first.updated_by = 'u-sch';
-  first.updated_at = hoursAgo(1);
+  const audit: AuditEntry[] = [];
+  const emailOf: Record<string, string> = {
+    'u-att1': 'curant1@exemplu.test', 'u-att2': 'curant2@exemplu.test', 'u-att3': 'curant3@exemplu.test',
+  };
+  // Istoric: creare, iar pentru cele care nu sunt „programat” și o schimbare de status.
+  for (const ap of appointments) {
+    const created = { ...ap, status: 'planned' as const };
+    audit.push(entry(audit.length + 1, created, 'INSERT', 'u-sch', 'programari@exemplu.test', ap.created_at, null));
+    if (ap.status !== 'planned') {
+      const at = ap.status === 'confirmed' || new Date(ap.starts_at).getTime() > nowMs
+        ? new Date(Math.min(nowMs, new Date(ap.created_at).getTime() + 3600_000)).toISOString()
+        : ap.ends_at;
+      const by = ap.status === 'confirmed' ? 'u-sch' : ap.attending_id;
+      audit.push(entry(audit.length + 1, ap, 'UPDATE', by, emailOf[by] ?? 'programari@exemplu.test', at, created));
+      ap.updated_at = at;
+      ap.updated_by = by;
+    }
+  }
+  audit.sort((x, y) => x.changed_at.localeCompare(y.changed_at));
+  audit.forEach((e, i) => (e.id = i + 1));
   audit.reverse(); // cele mai noi primele
   return {
     profiles, cabinets, rooms, procedures, appointments, audit,
