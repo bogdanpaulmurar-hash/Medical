@@ -86,6 +86,21 @@ function load<T>(file: string): Promise<T> {
 export const loadGuide = () => load<GuideData>('guide.json');
 export const loadDevices = () => load<DeviceData>('devices.json');
 
+export interface ScaleItem {
+  id?: string; t?: string; g?: string; h?: string;
+  o?: (string | number)[][]; n?: number;
+  num?: number; min?: number; max?: number; u?: string; uL?: string; unable?: string;
+  cb?: number; np?: number;
+}
+export interface Scale {
+  id: string; cat: string; t: string; al?: string; what: string; who?: string; time?: string;
+  items?: ScaleItem[]; bands?: [number, number, string, string][]; bandSrc?: string;
+  about?: string; src?: string[]; lic?: string;
+  info?: boolean; sec?: [string, string | string[]][]; calc?: string; pts?: number;
+}
+export interface ScaleData { cats: { id: string; t: string }[]; scales: Scale[] }
+export const loadScales = () => load<ScaleData>('scales.json');
+
 /** Normalizare pentru căutare: fără diacritice și litere mici. */
 export const norm = (s: string) =>
   s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
