@@ -7,7 +7,7 @@ import { STATUSES, type Appointment, type AppointmentInput, type Status } from '
 interface Props {
   appointment: Appointment | null;
   defaultDate: Date;
-  defaults?: { start: Date; roomId?: string };
+  defaults?: { start: Date; roomId?: string; attendingId?: string; receivingId?: string };
   onClose: () => void;
   onSaved: (saved: Appointment) => void;
 }
@@ -36,8 +36,8 @@ export function AppointmentForm({ appointment, defaultDate, defaults, onClose, o
     date: toDateInput(initStart),
     time: toTimeInput(initStart),
     duration: initDuration,
-    attending_id: appointment?.attending_id ?? (me?.role === 'attending' ? me.id : ''),
-    receiving_id: appointment?.receiving_id ?? '',
+    attending_id: appointment?.attending_id ?? defaults?.attendingId ?? (me?.role === 'attending' ? me.id : ''),
+    receiving_id: appointment?.receiving_id ?? defaults?.receivingId ?? '',
     status: (appointment?.status ?? 'planned') as Status,
   });
   const [dayItems, setDayItems] = useState<Appointment[]>([]);

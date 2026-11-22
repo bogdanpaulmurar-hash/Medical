@@ -1,5 +1,5 @@
 import { createClient, type PostgrestError, type SupabaseClient } from '@supabase/supabase-js';
-import type { Api } from './api';
+import type { Api, AuditFilters, SearchFilters } from './api';
 import { ApiError } from './api';
 import type { AppSettings, Appointment, AppointmentInput, AuditEntry, Cabinet, Procedure, Profile, Room } from '../types';
 
@@ -130,9 +130,33 @@ export class SupabaseApi implements Api {
     };
   }
 
-  async listAudit({ recordId, limit = 200 }: { recordId?: string; limit?: number }) {
+  async listAudit({ recordId, limit = 200, userId, action, from, to }: AuditFilters) {
     let q = this.sb.from('audit_log').select('*').order('changed_at', { ascending: false }).limit(limit);
     if (recordId) q = q.eq('record_id', recordId);
+    if (userId) q = q.eq('changed_by', userId);
+    if (action) q = q.eq('action', action);
+    if (from) q = q.gte('changed_at', from);
+    if (to) q = q.lt('changed_at', to);
     return check(await q) as AuditEntry[];
+  }
+
+  async searchAppointments(f: SearchFilters, offset: number, limit: number) {
+    let q = this.sb.from('appointments').select('*', { count: 'exact' });
+    // Eliminăm caracterele speciale din sintaxa PostgREST / ilike.
+    const text = (f.text ?? '').replace(/[%_,()*\\]/g, ' ').trim();
+    if (text) {
+      const cols = ['patient_code', 'patient_initials', 'patient_name'];
+      if (f.includeNotes) cols.push('diagnosis', 'notes');
+      q = q.or(cols.map((c) => `${c}.ilike.%${text}%`).join(','));
+    }
+    if (f.doctorId) q = q.or(`attending_id.eq.${f.doctorId},receiving_id.eq.${f.doctorId}`);
+    if (f.procedureId) q = q.eq('procedure_id', f.procedureId);
+    if (f.roomId) q = q.eq('room_id', f.roomId);
+    if (f.status) q = q.eq('status', f.status);
+    if (f.from) q = q.gte('starts_at', f.from);
+    if (f.to) q = q.lt('starts_at', f.to);
+    const res = await q.order('starts_at', { ascending: false }).range(offset, offset + limit - 1);
+    if (res.error) throw toApiError(res.error);
+    return { rows: (res.data ?? []) as Appointment[], total: res.count ?? 0 };
   }
 }

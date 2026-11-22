@@ -1,4 +1,4 @@
-import type { Api } from './api';
+import type { Api, AuditFilters, SearchFilters } from './api';
 import { ApiError, findConflicts } from './api';
 import type {
   AppSettings,
@@ -281,8 +281,37 @@ export class DemoApi implements Api {
     return () => this.apptListeners.delete(cb);
   }
 
-  async listAudit({ recordId, limit = 200 }: { recordId?: string; limit?: number }) {
-    return this.db.audit.filter((e) => !recordId || e.record_id === recordId).slice(0, limit);
+  async listAudit({ recordId, limit = 200, userId, action, from, to }: AuditFilters) {
+    return this.db.audit
+      .filter(
+        (e) =>
+          (!recordId || e.record_id === recordId) &&
+          (!userId || e.changed_by === userId) &&
+          (!action || e.action === action) &&
+          (!from || e.changed_at >= from) &&
+          (!to || e.changed_at < to),
+      )
+      .slice(0, limit);
+  }
+
+  async searchAppointments(f: SearchFilters, offset: number, limit: number) {
+    const t = (f.text ?? '').trim().toLowerCase();
+    const hit = (v: string | null) => !!v && v.toLowerCase().includes(t);
+    const all = this.db.appointments
+      .filter(
+        (a) =>
+          (!t ||
+            hit(a.patient_code) || hit(a.patient_initials) || hit(a.patient_name) ||
+            (!!f.includeNotes && (hit(a.diagnosis) || hit(a.notes)))) &&
+          (!f.doctorId || a.attending_id === f.doctorId || a.receiving_id === f.doctorId) &&
+          (!f.procedureId || a.procedure_id === f.procedureId) &&
+          (!f.roomId || a.room_id === f.roomId) &&
+          (!f.status || a.status === f.status) &&
+          (!f.from || a.starts_at >= f.from) &&
+          (!f.to || a.starts_at < f.to),
+      )
+      .sort((a, b) => b.starts_at.localeCompare(a.starts_at));
+    return { rows: all.slice(offset, offset + limit), total: all.length };
   }
 
   /** Doar în demo: resetează datele fictive. */

@@ -42,9 +42,17 @@ function HelpRo() {
       </ul>
 
       <h2>3. Vizualizarea programărilor</h2>
+      <p>În pagina <b>Programări</b> alegeți tipul de vizualizare din bara de sus. Alegerea se păstrează pe dispozitivul dumneavoastră.</p>
       <ul>
-        <li>Pagina <b>Programări</b> arată ziua sau săptămâna curentă. Folosiți ‹ › și <b>Azi</b> pentru navigare.</li>
-        <li>Filtrați după salon sau medic. Bifați <b>Arată anulate</b> pentru a vedea și programările anulate.</li>
+        <li><b>Timeline:</b> o zi, pe ore. Coloanele sunt saloanele, sau medicii curanți ori primitori (alegeți din <i>Grupare</i>). O atingere pe un spațiu liber adaugă o programare cu ora și coloana deja completate.</li>
+        <li><b>Săptămână:</b> calendar cu zilele săptămânii, pe ore. <b>Lună:</b> calendar lunar; apăsați o zi pentru a o deschide în Timeline.</li>
+        <li><b>Listă:</b> programările în ordine, grupate pe zile, pentru ziua, săptămâna sau luna aleasă, ori pentru următoarele 30 de zile.</li>
+        <li><b>Ocupare:</b> saloanele pe rânduri, zilele pe coloane. Fiecare celulă arată cât din intervalul 08:00–18:00 este ocupat. Folosiți-o ca să găsiți rapid locuri libere; apăsați o celulă pentru a deschide ziua.</li>
+        <li><b>Pe status:</b> coloane pentru Programat, Confirmat, În desfășurare, Efectuat și Anulat, pentru ziua aleasă.</li>
+      </ul>
+      <ul>
+        <li>Folosiți ‹ ›, <b>Azi</b> sau selectorul de dată pentru navigare. Filtrați după salon sau medic. Bifați <b>Arată anulate</b> pentru a le vedea.</li>
+        <li>Culoarea unei programări arată salonul. Linia roșie din Timeline este ora curentă.</li>
         <li>Toți utilizatorii văd aceleași programări, actualizate automat.</li>
       </ul>
 
@@ -64,10 +72,18 @@ function HelpRo() {
         <li>Butonul <b>Istoric</b> din fereastra programării arată toate modificările acesteia.</li>
       </ul>
 
-      <h2>6. Istoric</h2>
-      <p>Pagina <b>Istoric</b> arată toate modificările din aplicație: cine, ce a schimbat (valoarea veche → nouă) și când. Istoricul nu poate fi modificat sau șters.</p>
+      <h2>6. Căutare în toate programările</h2>
+      <ul>
+        <li>Pagina <b>Căutare</b> caută în toate programările, și în cele vechi. Scrieți un cod, inițiale sau un nume și, dacă doriți, restrângeți după procedură, salon, medic, status sau perioadă.</li>
+        <li>Bifați <b>Caută și în diagnostic și note</b> dacă trebuie să căutați și în aceste câmpuri.</li>
+        <li>Rezultatele sunt ordonate de la cele mai noi. Apăsați data unei programări pentru a o deschide, împreună cu istoricul ei.</li>
+        <li><b>Exportă CSV</b> salvează rezultatele într-un fișier pe care îl deschideți în Excel. Fișierul conține doar codul, inițialele, procedura, ora, salonul, medicii și statusul, fără nume sau diagnostic.</li>
+      </ul>
 
-      <h2>7. Setări</h2>
+      <h2>7. Istoric</h2>
+      <p>Pagina <b>Istoric</b> arată toate modificările din aplicație: cine, ce a schimbat (valoarea veche → nouă) și când. Îl puteți filtra după utilizator, tipul acțiunii și perioadă. Istoricul nu poate fi modificat sau șters, iar programările rămân stocate și după anulare.</p>
+
+      <h2>8. Setări</h2>
       <ul>
         <li><b>Preferințe personale:</b> limbă (română / engleză), temă luminoasă sau întunecată, mărimea textului.</li>
         <li><b>Notificările mele:</b> email și, dacă e activat de administrator, SMS.</li>
@@ -76,7 +92,7 @@ function HelpRo() {
         <li><b>Notificări (toată clinica):</b> administratorul poate porni sau opri emailul și SMS-ul. SMS-ul costă per mesaj, de aceea este oprit implicit.</li>
       </ul>
 
-      <h2>8. Protecția datelor</h2>
+      <h2>9. Protecția datelor</h2>
       <ul>
         <li>Identificați pacienții prin cod și inițiale. Introduceți numele și diagnosticul doar când este necesar.</li>
         <li>Nu lăsați aplicația deschisă pe un dispozitiv comun. Apăsați <b>Ieșire</b> la final.</li>
@@ -107,9 +123,17 @@ function HelpEn() {
       </ul>
 
       <h2>3. Viewing appointments</h2>
+      <p>On the <b>Schedule</b> page, pick a view from the bar at the top. Your choice is remembered on this device.</p>
       <ul>
-        <li>The <b>Schedule</b> page shows the current day or week. Use ‹ › and <b>Today</b> to move around.</li>
-        <li>Filter by room or doctor. Tick <b>Show cancelled</b> to also see cancelled appointments.</li>
+        <li><b>Timeline:</b> one day, by hour. Columns are rooms, or attending or receiving doctors (choose in <i>Group by</i>). Tap an empty slot to add an appointment with the time and column already filled in.</li>
+        <li><b>Week:</b> a calendar of the week's days, by hour. <b>Month:</b> a monthly calendar; tap a day to open it in Timeline.</li>
+        <li><b>List:</b> appointments in order, grouped by day, for the chosen day, week or month, or for the next 30 days.</li>
+        <li><b>Occupancy:</b> rooms as rows, days as columns. Each cell shows how much of the 08:00–18:00 window is booked. Use it to find free slots quickly; tap a cell to open that day.</li>
+        <li><b>By status:</b> columns for Planned, Confirmed, In progress, Done and Cancelled, for the chosen day.</li>
+      </ul>
+      <ul>
+        <li>Use ‹ ›, <b>Today</b> or the date picker to move around. Filter by room or doctor. Tick <b>Show cancelled</b> to see them.</li>
+        <li>An appointment's colour shows its room. The red line in Timeline is the current time.</li>
         <li>Everyone sees the same appointments, updated automatically.</li>
       </ul>
 
@@ -129,10 +153,18 @@ function HelpEn() {
         <li>The <b>History</b> button in the appointment window shows every change made to it.</li>
       </ul>
 
-      <h2>6. History</h2>
-      <p>The <b>History</b> page lists every change in the app: who changed what (old value → new value) and when. The history cannot be edited or deleted.</p>
+      <h2>6. Searching all appointments</h2>
+      <ul>
+        <li>The <b>Search</b> page searches every appointment, including old ones. Type a code, initials or a name and, if you like, narrow it down by procedure, room, doctor, status or date range.</li>
+        <li>Tick <b>Also search diagnosis and notes</b> if you need to search those fields too.</li>
+        <li>Results are sorted newest first. Tap an appointment's date to open it together with its history.</li>
+        <li><b>Export CSV</b> saves the results to a file you can open in Excel. The file contains only code, initials, procedure, time, room, doctors and status, with no name or diagnosis.</li>
+      </ul>
 
-      <h2>7. Settings</h2>
+      <h2>7. History</h2>
+      <p>The <b>History</b> page lists every change in the app: who changed what (old value → new value) and when. You can filter it by user, type of action and date range. The history cannot be edited or deleted, and appointments stay stored even after they are cancelled.</p>
+
+      <h2>8. Settings</h2>
       <ul>
         <li><b>Personal preferences:</b> language (Romanian / English), light or dark theme, text size.</li>
         <li><b>My notifications:</b> email and, if the administrator turned it on, SMS.</li>
@@ -141,7 +173,7 @@ function HelpEn() {
         <li><b>Notifications (whole clinic):</b> the administrator can turn email and SMS on or off. SMS costs money per message, so it is off by default.</li>
       </ul>
 
-      <h2>8. Data protection</h2>
+      <h2>9. Data protection</h2>
       <ul>
         <li>Identify patients by code and initials. Enter name and diagnosis only when needed.</li>
         <li>Do not leave the app open on a shared device. Press <b>Sign out</b> when done.</li>
