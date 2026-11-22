@@ -96,7 +96,7 @@ export interface Scale {
   id: string; cat: string; t: string; al?: string; what: string; who?: string; time?: string;
   items?: ScaleItem[]; bands?: [number, number, string, string][]; bandSrc?: string;
   about?: string; src?: string[]; lic?: string;
-  info?: boolean; sec?: [string, string | string[]][]; calc?: string; pts?: number;
+  info?: boolean; sec?: [string, string | string[]][]; calc?: string; pts?: number; special?: string;
 }
 export interface ScaleData { cats: { id: string; t: string }[]; scales: Scale[] }
 export const loadScales = () => load<ScaleData>('scales.json');
