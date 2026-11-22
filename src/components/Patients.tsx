@@ -1,3 +1,4 @@
+import { printHtml, sheetHtml, timetableHtml, type PlanPrintData } from '../printPlan';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ApiError } from '../data/api';
 import { api, fmtTime, locale, toDateInput, useApp } from '../state';
@@ -39,7 +40,7 @@ type Dialog =
   | { kind: 'book'; item: PlanItem };
 
 export function PatientsPage() {
-  const { t, prefs, me, patients, plan, procedures, profiles, rooms, cabinets, reloadLookups } = useApp();
+  const { t, prefs, me, patients, plan, procedures, profiles, rooms, cabinets, settings, reloadLookups } = useApp();
   const [selectedId, setSelectedId] = useState<string>(() => {
     try {
       return sessionStorage.getItem('medsched-patient') ?? '';
@@ -92,6 +93,9 @@ export function PatientsPage() {
     new Date(iso).toLocaleDateString(locale(prefs.lang), { weekday: 'short', day: 'numeric', month: 'short' });
 
   const items = selected ? planOf(selected.id) : [];
+  const pd = (): PlanPrintData => ({
+    org: settings.clinic_name, patient: selected as Patient, doctor: doctorName(selected?.doctor_id ?? null), items, procOf, roomOf, appts,
+  });
   const now = Date.now();
   const upcoming = appts.filter((a) => new Date(a.ends_at).getTime() >= now);
   const past = appts.filter((a) => new Date(a.ends_at).getTime() < now).reverse();
@@ -243,6 +247,10 @@ export function PatientsPage() {
 
               <div className="card">
                 <h2>{t('bookedHours')}</h2>
+                <div className="row">
+                  <button className="secondary small" onClick={() => printHtml(`Fișă de tratament ${selected.code}`, sheetHtml(pd()))}>🖨 {t('printSheet')}</button>
+                  <button className="secondary small" onClick={() => printHtml(`Orar ${selected.code}`, timetableHtml(pd()))}>🖨 {t('printTimetable')}</button>
+                </div>
                 {upcoming.length === 0 && <p className="muted">{t('noBooked')}</p>}
                 <ul className="plain slot-rows">
                   {upcoming.map((a) => (
