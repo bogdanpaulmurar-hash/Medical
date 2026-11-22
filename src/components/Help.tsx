@@ -28,7 +28,7 @@ function HelpRo() {
   return (
     <article lang="ro">
       <h1>Instrucțiuni de utilizare</h1>
-      <p className="muted">Cuprins: 1 Autentificare · 2 Instalare și actualizare · 3 Meniul aplicației · 4 Vizualizarea programărilor · 5 Pacienți și plan · 6 Programare nouă · 7 Deschidere, status, modificare, anulare · 8 Căutare · 9 Istoric · 10 Setări · 11 Notificări · 12 Roluri · 13 Protecția datelor · 14 Probleme frecvente</p>
+      <p className="muted">Cuprins: 1 Autentificare · 2 Instalare și actualizare · 3 Meniul aplicației · 4 Vizualizarea programărilor · 5 Pacienți și plan · 6 Programare nouă · 7 Deschidere, status, modificare, anulare · 8 Căutare · 9 Istoric · 10 Setări · 11 Notificări · 12 Roluri · 13 Protecția datelor · 14 Probleme frecvente · 15 Ghiduri medicale · 16 Tipărire și export · 17 Utilizare reală și versiunea de test</p>
 
       <h2>1. Autentificare</h2>
       <ol>
@@ -44,7 +44,7 @@ function HelpRo() {
         <li><b>Android / Chrome:</b> meniul ⋮ → <i>Instalează aplicația</i> (sau <i>Adaugă pe ecranul de pornire</i>).</li>
         <li><b>iPhone / Safari:</b> butonul Partajare → <i>Adaugă pe ecranul principal</i>.</li>
         <li><b>Calculator (Chrome / Edge):</b> pictograma de instalare din bara de adrese.</li>
-        <li><b>Versiunea aplicației</b> apare sus, lângă numele Vademecum MFR (de exemplu <i>v4.5</i>). Pe calculator, ținând cursorul deasupra ei, vedeți și data build-ului. Aceeași informație este jos, pe pagina de login, în Setări și aici.</li>
+        <li><b>Versiunea aplicației</b> apare sus, lângă numele Vademecum MFR (de exemplu <i>v4.6</i>). Pe calculator, ținând cursorul deasupra ei, vedeți și data build-ului. Aceeași informație este jos, pe pagina de login, în Setări și aici.</li>
         <li><b>Actualizare:</b> după o lansare nouă, dacă nu vedeți numărul nou de versiune, închideți complet aplicația (o scoateți din aplicațiile deschise) și deschideți-o din nou.</li>
       </ul>
 
@@ -149,6 +149,29 @@ function HelpRo() {
         <li><b>Nu văd funcțiile noi:</b> închideți complet aplicația și deschideți-o din nou, apoi verificați numărul versiunii sus.</li>
         <li><b>Nu găsesc o programare:</b> bifați <b>Arată anulate</b> sau folosiți pagina <b>Căutare</b>.</li>
       </ul>
+
+      <h2>15. Ghiduri medicale (meniul Ghiduri)</h2>
+      <ul>
+        <li><b>Afecțiuni:</b> alegeți o categorie și o afecțiune. Pagina arată recomandările din ghiduri, grupate pe secțiuni și pe status (Recomandat, Se poate folosi, Date insuficiente, Nu se recomandă), cu gradul recomandării și nivelul dovezilor. Bifa <b>Arată și recomandările din manualul de referință</b> adaugă și textele din manual. Butonul din dreptul unui aparat deschide pagina aparatului; <b>+</b> adaugă procedura în planul pacientului ales (doar medicii). Secțiunea <b>Orteze, bandaje și mijloace de mers</b> dă, pe tipuri, recomandările din ghiduri și informațiile din manualul de ortezare.</li>
+        <li><b>Aparate:</b> pentru fiecare aparat: parametri, indicații, programe și contraindicații. Contraindicațiile se văd și la afecțiunea la care se aplică.</li>
+        <li><b>Scale:</b> scalele de evaluare, cu calcul automat al scorului și interpretare. <b>ISNCSCI</b> are fișa completă de examinare și algoritmul oficial de clasificare.</li>
+        <li><b>Examen obiectiv:</b> teste de examinare, cu rapoarte de probabilitate și combinarea rezultatelor.</li>
+        <li><b>Bilet de ieșire:</b> se completează rubricile, iar textul se copiază sau se tipărește.</li>
+        <li><b>Referate:</b> referate medicale (A16, A5, HC, A39b etc.). Se completează o dată pe pacient și se păstrează doar dacă păstrarea este pornită în Setări. Le văd doar medicii și administratorul; persoana de la programări nu are acces. Istoricul păstrează cine și când a modificat, nu și textul.</li>
+        <li>Numele și CNP-ul pacientului nu se introduc în aceste documente.</li>
+      </ul>
+
+      <h2>16. Tipărire și export</h2>
+      <ul>
+        <li>În fișa pacientului: <b>Fișă de tratament</b> (planul și evidența ședințelor, cu loc de semnătură) și <b>Orar</b> (ora, procedura și locul). Se tipăresc în limba aleasă în Setări.</li>
+        <li>În Căutare: <b>Exportă CSV</b>, fără nume sau diagnostic.</li>
+      </ul>
+
+      <h2>17. Pregătirea pentru utilizare reală și versiunea de test</h2>
+      <ul>
+        <li>În Setări, administratorul are <b>Pregătire pentru utilizare reală</b>: numele unității, ștergerea datelor fictive (catalogul și setările rămân), utilizatorii și verificările finale. Utilizatorii se adaugă din Setări, nu din cod.</li>
+        <li>Bannerul albastru <b>VERSIUNE DE TEST</b> înseamnă că sunteți pe linkul de probă, unde se verifică noutățile înainte să ajungă în aplicația principală. Datele de acolo sunt separate.</li>
+      </ul>
     </article>
   );
 }
@@ -157,7 +180,7 @@ function HelpEn() {
   return (
     <article lang="en">
       <h1>User instructions</h1>
-      <p className="muted">Contents: 1 Signing in · 2 Installing and updating · 3 App menu · 4 Viewing appointments · 5 Patients and plan · 6 New appointment · 7 Opening, status, changing, cancelling · 8 Search · 9 History · 10 Settings · 11 Notifications · 12 Roles · 13 Data protection · 14 Common problems</p>
+      <p className="muted">Contents: 1 Signing in · 2 Installing and updating · 3 App menu · 4 Viewing appointments · 5 Patients and plan · 6 New appointment · 7 Opening, status, changing, cancelling · 8 Search · 9 History · 10 Settings · 11 Notifications · 12 Roles · 13 Data protection · 14 Common problems · 15 Medical guides · 16 Printing and export · 17 Real use and the test version</p>
 
       <h2>1. Signing in</h2>
       <ol>
@@ -173,7 +196,7 @@ function HelpEn() {
         <li><b>Android / Chrome:</b> menu ⋮ → <i>Install app</i> (or <i>Add to Home screen</i>).</li>
         <li><b>iPhone / Safari:</b> Share button → <i>Add to Home Screen</i>.</li>
         <li><b>Computer (Chrome / Edge):</b> the install icon in the address bar.</li>
-        <li><b>The app version</b> is shown at the top, next to the Vademecum MFR name (for example <i>v4.5</i>). On a computer, hover over it to see the build date too. The same information is at the bottom of the login page, in Settings and here.</li>
+        <li><b>The app version</b> is shown at the top, next to the Vademecum MFR name (for example <i>v4.6</i>). On a computer, hover over it to see the build date too. The same information is at the bottom of the login page, in Settings and here.</li>
         <li><b>Updating:</b> after a new release, if you do not see the new version number, close the app completely (remove it from your open apps) and open it again.</li>
       </ul>
 
@@ -277,6 +300,29 @@ function HelpEn() {
         <li><b>I cannot save an appointment:</b> read the red message: the device has no free place, a doctor is booked or the patient has another procedure in that interval. Change the time, device or doctor. If it says the procedure is not in the plan, ask the doctor to add it in the patient record.</li>
         <li><b>I do not see the new features:</b> close the app completely and open it again, then check the version number at the top.</li>
         <li><b>I cannot find an appointment:</b> tick <b>Show cancelled</b> or use the <b>Search</b> page.</li>
+      </ul>
+
+      <h2>15. Medical guides (Guides menu)</h2>
+      <ul>
+        <li><b>Conditions:</b> pick a category and a condition. The page shows the guideline recommendations, grouped by section and status (Recommended, May be used, Insufficient data, Not recommended), with the recommendation grade and level of evidence. <b>Also show recommendations from the reference textbook</b> adds the textbook texts. The button next to a device opens its page; <b>+</b> adds the procedure to the chosen patient's plan (doctors only). The <b>Orthoses, bandages and walking aids</b> section gives, by type, the guideline recommendations and the orthotics textbook information.</li>
+        <li><b>Devices:</b> for each device: parameters, indications, programs and contraindications. Contraindications also show on the condition they apply to.</li>
+        <li><b>Scales:</b> assessment scales, with automatic scoring and interpretation. <b>ISNCSCI</b> has the full examination form and the official classification algorithm.</li>
+        <li><b>Objective exam:</b> examination tests, with likelihood ratios and combination of results.</li>
+        <li><b>Discharge note:</b> fill in the fields, then copy or print the text.</li>
+        <li><b>Medical reports:</b> medical reports (A16, A5, HC, A39b etc.). Filled in once per patient and kept only if keeping is switched on in Settings. Only doctors and the administrator can see them; the scheduling person has no access. History records who changed it and when, not the text.</li>
+        <li>Do not enter the patient's name or personal ID number in these documents.</li>
+      </ul>
+
+      <h2>16. Printing and export</h2>
+      <ul>
+        <li>In the patient record: <b>Treatment sheet</b> (plan and session log, with a signature line) and <b>Timetable</b> (time, procedure and place). They print in the language chosen in Settings.</li>
+        <li>In Search: <b>Export CSV</b>, without names or diagnosis.</li>
+      </ul>
+
+      <h2>17. Getting ready for real use, and the test version</h2>
+      <ul>
+        <li>In Settings, the administrator has <b>Getting ready for real use</b>: the unit name, deleting the fictitious data (the catalogue and settings stay), the users and the final checks. Users are added from Settings, not from code.</li>
+        <li>The blue <b>TEST VERSION</b> banner means you are on the trial link, where new features are checked before they reach the main app. Its data is separate.</li>
       </ul>
     </article>
   );
