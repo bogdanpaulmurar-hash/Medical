@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useApp } from '../state';
 import { loadScales, norm, type Scale, type ScaleData, type ScaleItem } from '../data/vademecum';
 import { scCompute, scHas, scOpts } from '../data/scaleEngine';
+import { IsncsciForm } from './Isncsci';
 
 type Answers = Record<string, Record<string, string>>;
 
@@ -99,7 +100,7 @@ function ScalePage({
 }) {
   const { t } = useApp();
   const [msg, setMsg] = useState('');
-  const calculable = !sc.info && !sc.sec;
+  const calculable = !sc.info && !sc.sec && !sc.special;
   const r = useMemo<Result | null>(() => (calculable ? (scCompute(sc, v) as Result) : null), [sc, v, calculable]);
 
   const copy = async () => {
@@ -145,6 +146,8 @@ function ScalePage({
         </div>
       )}
 
+      {sc.special === 'isncsci' && <IsncsciForm v={v} onSet={onSet} onReset={onReset} />}
+
       {calculable && r && (
         <div className="sc-cols">
           <form className="sc-form" onSubmit={(e) => e.preventDefault()}>
@@ -188,7 +191,7 @@ function ScalePage({
         </div>
       )}
 
-      {calculable && (
+      {(calculable || sc.special) && (
         <details className="vg">
           <summary>{t('scAbout')}</summary>
           {sc.about && <p>{sc.about}</p>}

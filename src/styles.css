@@ -713,3 +713,24 @@ button.sc-card .muted { white-space: normal; }
 
 .test-banner{background:#e0e7ff;color:#1e3a8a;text-align:center;padding:6px 12px;font-weight:600;font-size:.9rem}
 @media (prefers-color-scheme: dark){:root:not([data-theme='light']) .test-banner{background:#1e2a5a;color:#c7d2fe}}
+
+/* ISNCSCI */
+.isn-tools{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
+.isn-tools .sc-h{margin:0}
+.isn-scroll{overflow-x:auto;background:var(--surface);border:1px solid var(--border);border-radius:12px}
+.isn-t{border-collapse:collapse;width:100%;font-size:15px}
+.isn-t th,.isn-t td{padding:3px 5px;border-bottom:1px solid #e6ebf0;text-align:center}
+.isn-t thead th{background:#f3f6f9;font-size:14px;color:var(--text);position:sticky;top:0}
+.isn-t tbody th{text-align:left;font-weight:600;white-space:nowrap}
+.isn-t tr.key{background:#fbfcfe}
+.isn-lv{display:inline-block;min-width:2.6em;font-weight:700}
+.isn-mu{display:block;font-weight:400;font-size:12.5px;color:var(--muted);white-space:normal;max-width:15em;line-height:1.25}
+.isn-t td.m{background:#f2f6fb}
+.isn-s{font:inherit;font-size:16px;min-width:3.4em;padding:5px 4px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--text)}
+.isn-s.empty{border-color:#b9c4cf;background:var(--surface)df3}
+.hd-s,.isn-leg{display:none}
+.isn-extra{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px 14px;margin-top:4px}
+.isn-bin{display:flex;flex-direction:column;gap:4px;font-size:15px;font-weight:600}
+.isn-bin .isn-s{max-width:100%}
+
+@media (max-width:899px){.isn-mu{display:none}.isn-t th,.isn-t td{padding:3px 2px}.isn-s{min-width:2.5em;padding:6px 2px;-webkit-appearance:none;appearance:none;text-align:center;text-align-last:center}.hd-l{display:none}.hd-s{display:inline}.isn-leg{display:block;margin:0}.isn-t{font-size:14px}.isn-lv{min-width:2.2em}}
