@@ -44,7 +44,7 @@ function HelpRo() {
         <li><b>Android / Chrome:</b> meniul ⋮ → <i>Instalează aplicația</i> (sau <i>Adaugă pe ecranul de pornire</i>).</li>
         <li><b>iPhone / Safari:</b> butonul Partajare → <i>Adaugă pe ecranul principal</i>.</li>
         <li><b>Calculator (Chrome / Edge):</b> pictograma de instalare din bara de adrese.</li>
-        <li><b>Versiunea aplicației</b> apare sus, lângă numele Vademecum MFR (de exemplu <i>v4.7</i>). Pe calculator, ținând cursorul deasupra ei, vedeți și data build-ului. Aceeași informație este jos, pe pagina de login, în Setări și aici.</li>
+        <li><b>Versiunea aplicației</b> apare sus, lângă numele Vademecum MFR (de exemplu <i>v4.8</i>). Pe calculator, ținând cursorul deasupra ei, vedeți și data build-ului. Aceeași informație este jos, pe pagina de login, în Setări și aici.</li>
         <li><b>Actualizare:</b> după o lansare nouă, dacă nu vedeți numărul nou de versiune, închideți complet aplicația (o scoateți din aplicațiile deschise) și deschideți-o din nou.</li>
       </ul>
 
@@ -164,6 +164,7 @@ function HelpRo() {
       <h2>16. Tipărire și export</h2>
       <ul>
         <li>În fișa pacientului: <b>Fișă de tratament</b> (planul și evidența ședințelor, cu loc de semnătură) și <b>Orar</b> (ora, procedura și locul). Se tipăresc în limba aleasă în Setări.</li>
+        <li><b>Fișă format spital (beta):</b> fișa de tratament în formatul hârtiei din spital, cu câte un bloc pe procedură. Data, ora și sala se completează singure din programările făcute (care țin deja cont de sală, medic și calendar); executantul, parametrii și observațiile se scriu de mână. Se poate opri din Setări, la Preferințe personale.</li>
         <li>În Căutare: <b>Exportă CSV</b>, fără nume sau diagnostic.</li>
       </ul>
 
@@ -196,7 +197,7 @@ function HelpEn() {
         <li><b>Android / Chrome:</b> menu ⋮ → <i>Install app</i> (or <i>Add to Home screen</i>).</li>
         <li><b>iPhone / Safari:</b> Share button → <i>Add to Home Screen</i>.</li>
         <li><b>Computer (Chrome / Edge):</b> the install icon in the address bar.</li>
-        <li><b>The app version</b> is shown at the top, next to the Vademecum MFR name (for example <i>v4.7</i>). On a computer, hover over it to see the build date too. The same information is at the bottom of the login page, in Settings and here.</li>
+        <li><b>The app version</b> is shown at the top, next to the Vademecum MFR name (for example <i>v4.8</i>). On a computer, hover over it to see the build date too. The same information is at the bottom of the login page, in Settings and here.</li>
         <li><b>Updating:</b> after a new release, if you do not see the new version number, close the app completely (remove it from your open apps) and open it again.</li>
       </ul>
 
@@ -316,6 +317,7 @@ function HelpEn() {
       <h2>16. Printing and export</h2>
       <ul>
         <li>In the patient record: <b>Treatment sheet</b> (plan and session log, with a signature line) and <b>Timetable</b> (time, procedure and place). They print in the language chosen in Settings.</li>
+        <li><b>Hospital-format sheet (beta):</b> the treatment sheet in the layout of the hospital's paper form, one block per procedure. Date, time and room are filled in from the bookings already made (which already respect the room, the doctor and the calendar); the performer, parameters and notes are written by hand. It can be switched off in Settings, under Personal preferences.</li>
         <li>In Search: <b>Export CSV</b>, without names or diagnosis.</li>
       </ul>
 

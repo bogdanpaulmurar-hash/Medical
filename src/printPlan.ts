@@ -16,7 +16,10 @@ body{margin:0}.pr{font:10.5pt/1.4 Arial,"Segoe UI",sans-serif;color:#000}
 .pr th{background:#eee}.pr .c{text-align:center}.pr .sm{font-size:9pt;color:#333}.pr .org{font-size:9.5pt;margin:0 0 2mm}
 .pr .box{display:inline-block;width:3.2mm;height:3.2mm;border:.7pt solid #000;vertical-align:middle}
 .pr .sign{display:flex;justify-content:space-between;margin-top:12mm}.pr .foot{margin-top:6mm;font-size:8.5pt;color:#444}
-.pr tr{break-inside:avoid}`;
+.pr tr{break-inside:avoid}
+.pr .hs td,.pr .hs th{height:6.2mm}.pr .blk{break-inside:avoid;margin:0 0 5mm}.pr .blk .meta{display:flex;gap:4mm;margin:0 0 1.5mm;align-items:baseline}
+.pr .blk .meta .f{flex:1;border-bottom:.6pt solid #000;min-height:5mm;padding:0 1mm}.pr .blk .meta .f.s{flex:0 0 22mm}.pr .blk .meta .f.m{flex:0 0 52mm}.pr .blk .meta .f.l{flex:3}
+.pr .hdr td,.pr .hdr th{border:.6pt solid #444}.pr .cb{margin:1.5mm 0}`;
 
 export interface PlanPrintData {
   lang: 'ro' | 'en';
@@ -62,6 +65,44 @@ export function sheetHtml(d: PlanPrintData): string {
   h += `<p><span class="box"></span> ${x('Am verificat contraindicațiile procedurilor de mai sus.', 'I have checked the contraindications of the procedures above.')}</p>`;
   h += `<div class="sign"><span>${x('Medic', 'Doctor')}: ______________________</span><span>${x('Semnătura și parafa', 'Signature and stamp')}: ______________________</span></div>`;
   h += `<div class="foot">${esc(P.code)}. ${x('Generat la', 'Generated on')} ${fD(dayOf(new Date().toISOString()))}.</div>`;
+  return h;
+}
+
+/** Fișa de tratament în formatul spitalului (beta): câte un bloc pe procedură, cu data, ora și sala din programările făcute. */
+export function hospitalSheetHtml(d: PlanPrintData): string {
+  const A = live(d), P = d.patient;
+  const L = d.lang, x = (ro: string, en: string) => (L === 'en' ? en : ro);
+  const procs = d.items.filter((i) => i.active);
+  let h = (d.org ? `<p class="org"><b>${esc(d.org)}</b></p>` : '')
+    + `<h1>${x('Fișa de tratament nr.', 'Treatment sheet no.')} ______ &nbsp; ${x('Anexă la FOG', 'Annex to the medical record')} ________</h1>`;
+  h += `<table class="hdr"><tbody>`
+    + `<tr><th>${x('Data întocmirii', 'Date drawn up')}</th><td>${fD(dayOf(new Date().toISOString()))}</td><th>${x('Secția', 'Ward')}</th><td></td></tr>`
+    + `<tr><th>${x('Nume și prenume pacient', 'Patient name')}</th><td>${esc(P.name || '')}${P.name ? '' : ' '}<span class="sm">(${esc(P.code)} · ${esc(P.initials)})</span></td><th>${x('Vârsta', 'Age')}</th><td></td></tr>`
+    + `<tr><th>${x('Diagnostic', 'Diagnosis')}</th><td colspan="3">${esc(P.diagnosis || '')}</td></tr></tbody></table>`;
+  h += `<p class="cb"><span class="box"></span> ${x('La evaluarea clinică nu au fost identificate boli transmisibile, plăgi deschise, dermite sau dermatoze care să contraindice utilizarea bazinului terapeutic.', 'On clinical evaluation no communicable diseases, open wounds, dermatitis or dermatoses contraindicating the therapeutic pool were found.')}<br>`
+    + `<span class="box"></span> ${x('Au fost identificate contraindicații pentru utilizarea bazinului terapeutic.', 'Contraindications to using the therapeutic pool were found.')}</p>`;
+  h += `<div class="sign"><span>${x('Semnătura și parafa medicului', 'Doctor signature and stamp')}: ______________________ ${esc(d.doctor || '')}</span></div><div style="height:5mm"></div>`;
+  procs.forEach((it) => {
+    const p = d.procOf.get(it.procedure_id);
+    const mine = A.filter((a) => a.procedure_id === it.procedure_id);
+    const rooms = [...new Set(mine.map((a) => d.roomOf.get(a.room_id)?.name).filter(Boolean))].join(', ');
+    const dur = it.duration ?? p?.default_duration ?? 30;
+    const total = Math.max(it.sessions, mine.length, 1);
+    const pages = Math.ceil(total / 10);
+    for (let pg = 0; pg < pages; pg++) {
+      let rows = '';
+      for (let i = 0; i < 10; i++) {
+        const n = pg * 10 + i;
+        const a = mine[n];
+        rows += `<tr><td class="c">${n + 1}</td><td>${a ? fD(dayOf(a.starts_at)) : ''}</td><td class="c">${a ? hm(a.starts_at) : ''}</td><td></td><td></td></tr>`;
+      }
+      h += `<div class="blk"><div class="meta"><b>${x('Manoperă', 'Procedure')}</b><span class="f l">${esc(p?.name ?? '?')}</span><b>${x('Nr. sală', 'Room')}</b><span class="f m">${esc(rooms)}</span></div>`
+        + `<div class="meta"><b>${x('Parametri', 'Parameters')}</b><span class="f l">${esc(it.notes || '')}</span><b>${x('Durata', 'Duration')}</b><span class="f s">${dur} min</span></div>`
+        + `<table class="hs"><thead><tr><th class="c" style="width:12mm">${x('Nr. ședință', 'Session')}</th><th style="width:26mm">${x('Data', 'Date')}</th><th style="width:16mm">${x('Ora', 'Time')}</th><th>${x('Executant (nume, prenume, semnătura)', 'Performed by (name, signature)')}</th><th>${x('Observații', 'Notes')}</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    }
+  });
+  if (!procs.length) h += `<p>${x('Nicio procedură.', 'No procedures.')}</p>`;
+  h += `<div class="foot">${esc(P.code)}. ${x('Generat la', 'Generated on')} ${fD(dayOf(new Date().toISOString()))}. ${x('Data, ora și sala sunt cele programate în aplicație; restul se completează de mână.', 'Date, time and room are the ones booked in the app; the rest is filled in by hand.')}</div>`;
   return h;
 }
 
