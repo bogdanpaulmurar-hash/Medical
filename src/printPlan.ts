@@ -5,9 +5,9 @@ const pad = (n: number) => String(n).padStart(2, '0');
 const dayOf = (iso: string) => { const d = new Date(iso); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
 const hm = (iso: string) => { const d = new Date(iso); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
 const fD = (s: string) => `${s.slice(8, 10)}.${s.slice(5, 7)}.${s.slice(0, 4)}`;
-const WD = { ro: ['Du', 'Lu', 'Ma', 'Mi', 'Jo', 'Vi', 'Sâ'], en: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'] };
-const fDW = (s: string, l: 'ro' | 'en') => `${WD[l][new Date(`${s}T00:00`).getDay()]} ${s.slice(8, 10)}.${s.slice(5, 7)}`;
-const FREQ = { ro: { daily: 'zilnic', alternate: 'la două zile', weekly: 'săptămânal' }, en: { daily: 'daily', alternate: 'every other day', weekly: 'weekly' } } as Record<'ro' | 'en', Record<string, string>>;
+const WD = ['Du', 'Lu', 'Ma', 'Mi', 'Jo', 'Vi', 'Sâ'];
+const fDW = (s: string) => `${WD[new Date(`${s}T00:00`).getDay()]} ${s.slice(8, 10)}.${s.slice(5, 7)}`;
+const FREQ: Record<string, [string, string]> = { daily: ['zilnic', 'daily'], alternate: ['la două zile', 'every other day'], weekly: ['săptămânal', 'weekly'] };
 
 const CSS = `@media print{@page{size:A4 portrait;margin:12mm}}
 body{margin:0}.pr{font:10.5pt/1.4 Arial,"Segoe UI",sans-serif;color:#000}
@@ -17,12 +17,14 @@ body{margin:0}.pr{font:10.5pt/1.4 Arial,"Segoe UI",sans-serif;color:#000}
 .pr .box{display:inline-block;width:3.2mm;height:3.2mm;border:.7pt solid #000;vertical-align:middle}
 .pr .sign{display:flex;justify-content:space-between;margin-top:12mm}.pr .foot{margin-top:6mm;font-size:8.5pt;color:#444}
 .pr tr{break-inside:avoid}
+.pr .en-sub{display:block;font-style:italic;font-size:.8em;font-weight:400}
 .pr .hs td,.pr .hs th{height:6.2mm}.pr .blk{break-inside:avoid;margin:0 0 5mm}.pr .blk .meta{display:flex;gap:4mm;margin:0 0 1.5mm;align-items:baseline}
 .pr .blk .meta .f{flex:1;border-bottom:.6pt solid #000;min-height:5mm;padding:0 1mm}.pr .blk .meta .f.s{flex:0 0 22mm}.pr .blk .meta .f.m{flex:0 0 52mm}.pr .blk .meta .f.l{flex:3}
 .pr .hdr td,.pr .hdr th{border:.6pt solid #444}.pr .cb{margin:1.5mm 0}`;
 
 export interface PlanPrintData {
-  lang: 'ro' | 'en';
+  /** true: sub textul în română se adaugă, între paranteze, traducerea în engleză. */
+  en: boolean;
   org: string;
   patient: Patient;
   doctor: string;
@@ -38,7 +40,7 @@ function live(d: PlanPrintData) {
 
 export function sheetHtml(d: PlanPrintData): string {
   const A = live(d), P = d.patient;
-  const L = d.lang, x = (ro: string, en: string) => (L === 'en' ? en : ro);
+  const x = (ro: string, en: string) => (d.en ? `${ro}<span class="en-sub">(${en})</span>` : ro);
   const days = [...new Set(A.map((a) => dayOf(a.starts_at)))];
   const procs = d.items.filter((i) => i.active);
   const period = A.length ? `${fD(days[0])} - ${fD(days[days.length - 1])}` : x(`de la ${fD(P.start_date)}`, `from ${fD(P.start_date)}`);
@@ -50,38 +52,38 @@ export function sheetHtml(d: PlanPrintData): string {
   h += procs.map((it, i) => {
     const p = d.procOf.get(it.procedure_id);
     const rooms = [...new Set(A.filter((a) => a.procedure_id === it.procedure_id).map((a) => d.roomOf.get(a.room_id)?.name).filter(Boolean))].join(', ');
-    return `<tr><td class="c">${i + 1}</td><td><b>${esc(p?.name ?? '?')}</b></td><td class="c">${it.sessions}</td><td>${FREQ[L][it.frequency] ?? ''}</td>`
+    return `<tr><td class="c">${i + 1}</td><td><b>${esc(p?.name ?? '?')}</b></td><td class="c">${it.sessions}</td><td>${FREQ[it.frequency] ? x(FREQ[it.frequency][0], FREQ[it.frequency][1]) : ''}</td>`
       + `<td class="c">${it.duration ?? p?.default_duration ?? 30} min</td><td>${esc(rooms || '-')}</td><td>${esc(it.notes || '')}</td></tr>`;
   }).join('') || `<tr><td colspan="7">${x('Nicio procedură.', 'No procedures.')}</td></tr>`;
   h += '</tbody></table>';
   if (days.length && procs.length) {
-    h += `<h2>${x('Evidența ședințelor', 'Session log')}: ${esc(P.code)}</h2><table><thead><tr><th>${x('Data', 'Date')}</th>${procs.map((it) => `<th class="c">${esc(d.procOf.get(it.procedure_id)?.short_name || d.procOf.get(it.procedure_id)?.name || '?')}</th>`).join('')}<th>${x('Observații', 'Notes')}</th></tr></thead><tbody>`;
-    h += days.map((day) => `<tr><td class="c">${fDW(day, L)}</td>${procs.map((it) => {
+    h += `<h2>${x(`Evidența ședințelor: ${esc(P.code)}`, `Session log: ${esc(P.code)}`)}</h2><table><thead><tr><th>${x('Data', 'Date')}</th>${procs.map((it) => `<th class="c">${esc(d.procOf.get(it.procedure_id)?.short_name || d.procOf.get(it.procedure_id)?.name || '?')}</th>`).join('')}<th>${x('Observații', 'Notes')}</th></tr></thead><tbody>`;
+    h += days.map((day) => `<tr><td class="c">${fDW(day)}</td>${procs.map((it) => {
       const a = A.find((x) => dayOf(x.starts_at) === day && x.procedure_id === it.procedure_id);
       return `<td class="c">${a ? `<span class="box"></span> ${hm(a.starts_at)}` : '<span class="sm">-</span>'}</td>`;
     }).join('')}<td style="min-width:30mm"></td></tr>`).join('');
     h += '</tbody></table>';
   }
   h += `<p><span class="box"></span> ${x('Am verificat contraindicațiile procedurilor de mai sus.', 'I have checked the contraindications of the procedures above.')}</p>`;
-  h += `<div class="sign"><span>${x('Medic', 'Doctor')}: ______________________</span><span>${x('Semnătura și parafa', 'Signature and stamp')}: ______________________</span></div>`;
-  h += `<div class="foot">${esc(P.code)}. ${x('Generat la', 'Generated on')} ${fD(dayOf(new Date().toISOString()))}.</div>`;
+  h += `<div class="sign"><span>${x('Medic', 'Doctor')} ______________________</span><span>${x('Semnătura și parafa', 'Signature and stamp')} ______________________</span></div>`;
+  h += `<div class="foot">${esc(P.code)}. ${x(`Generat la ${fD(dayOf(new Date().toISOString()))}.`, `Generated on ${fD(dayOf(new Date().toISOString()))}.`)}</div>`;
   return h;
 }
 
 /** Fișa de tratament în formatul spitalului (beta): câte un bloc pe procedură, cu data, ora și sala din programările făcute. */
 export function hospitalSheetHtml(d: PlanPrintData): string {
   const A = live(d), P = d.patient;
-  const L = d.lang, x = (ro: string, en: string) => (L === 'en' ? en : ro);
+  const x = (ro: string, en: string) => (d.en ? `${ro}<span class="en-sub">(${en})</span>` : ro);
   const procs = d.items.filter((i) => i.active);
   let h = (d.org ? `<p class="org"><b>${esc(d.org)}</b></p>` : '')
-    + `<h1>${x('Fișa de tratament nr.', 'Treatment sheet no.')} ______ &nbsp; ${x('Anexă la FOG', 'Annex to the medical record')} ________</h1>`;
+    + `<h1>${x('Fișa de tratament nr. ______ &nbsp; Anexă la FOG ________', 'Treatment sheet no. ______ &nbsp; Annex to the medical record ________')}</h1>`;
   h += `<table class="hdr"><tbody>`
     + `<tr><th>${x('Data întocmirii', 'Date drawn up')}</th><td>${fD(dayOf(new Date().toISOString()))}</td><th>${x('Secția', 'Ward')}</th><td></td></tr>`
     + `<tr><th>${x('Nume și prenume pacient', 'Patient name')}</th><td>${esc(P.name || '')}${P.name ? '' : ' '}<span class="sm">(${esc(P.code)} · ${esc(P.initials)})</span></td><th>${x('Vârsta', 'Age')}</th><td></td></tr>`
     + `<tr><th>${x('Diagnostic', 'Diagnosis')}</th><td colspan="3">${esc(P.diagnosis || '')}</td></tr></tbody></table>`;
   h += `<p class="cb"><span class="box"></span> ${x('La evaluarea clinică nu au fost identificate boli transmisibile, plăgi deschise, dermite sau dermatoze care să contraindice utilizarea bazinului terapeutic.', 'On clinical evaluation no communicable diseases, open wounds, dermatitis or dermatoses contraindicating the therapeutic pool were found.')}<br>`
     + `<span class="box"></span> ${x('Au fost identificate contraindicații pentru utilizarea bazinului terapeutic.', 'Contraindications to using the therapeutic pool were found.')}</p>`;
-  h += `<div class="sign"><span>${x('Semnătura și parafa medicului', 'Doctor signature and stamp')}: ______________________ ${esc(d.doctor || '')}</span></div><div style="height:5mm"></div>`;
+  h += `<div class="sign"><span>${x('Semnătura și parafa medicului', 'Doctor signature and stamp')} ______________________ ${esc(d.doctor || '')}</span></div><div style="height:5mm"></div>`;
   procs.forEach((it) => {
     const p = d.procOf.get(it.procedure_id);
     const mine = A.filter((a) => a.procedure_id === it.procedure_id);
@@ -102,13 +104,13 @@ export function hospitalSheetHtml(d: PlanPrintData): string {
     }
   });
   if (!procs.length) h += `<p>${x('Nicio procedură.', 'No procedures.')}</p>`;
-  h += `<div class="foot">${esc(P.code)}. ${x('Generat la', 'Generated on')} ${fD(dayOf(new Date().toISOString()))}. ${x('Data, ora și sala sunt cele programate în aplicație; restul se completează de mână.', 'Date, time and room are the ones booked in the app; the rest is filled in by hand.')}</div>`;
+  h += `<div class="foot">${esc(P.code)}. ${x(`Generat la ${fD(dayOf(new Date().toISOString()))}.`, `Generated on ${fD(dayOf(new Date().toISOString()))}.`)} ${x('Data, ora și sala sunt cele programate în aplicație; restul se completează de mână.', 'Date, time and room are the ones booked in the app; the rest is filled in by hand.')}</div>`;
   return h;
 }
 
 export function timetableHtml(d: PlanPrintData): string {
   const A = live(d), P = d.patient;
-  const L = d.lang, x = (ro: string, en: string) => (L === 'en' ? en : ro);
+  const x = (ro: string, en: string) => (d.en ? `${ro}<span class="en-sub">(${en})</span>` : ro);
   const groups = new Map<string, Appointment[]>();
   A.forEach((a) => { const k = `${a.procedure_id}|${hm(a.starts_at)}|${a.room_id}`; groups.set(k, [...(groups.get(k) ?? []), a]); });
   const rows = [...groups.values()].sort((x, y) => hm(x[0].starts_at).localeCompare(hm(y[0].starts_at)));
@@ -119,15 +121,15 @@ export function timetableHtml(d: PlanPrintData): string {
     const a = g[0], p = d.procOf.get(a.procedure_id);
     const ds = g.map((x) => dayOf(x.starts_at));
     return `<tr><td class="c">${hm(a.starts_at)}-${hm(a.ends_at)}</td><td><b>${esc(p?.name ?? '?')}</b></td><td>${esc(d.roomOf.get(a.room_id)?.name ?? '-')}</td>`
-      + `<td>${fD(ds[0]).slice(0, 5)} - ${fD(ds[ds.length - 1]).slice(0, 5)} (${g.length} ${x('ședințe', 'sessions')})</td></tr>`;
+      + `<td>${fD(ds[0]).slice(0, 5)} - ${fD(ds[ds.length - 1]).slice(0, 5)} (${g.length} ședințe)</td></tr>`;
   }).join('') || `<tr><td colspan="4">${x('Nicio programare.', 'No appointments.')}</td></tr>`;
   h += '</tbody></table>';
-  h += `<div class="foot">${x('Generat la', 'Generated on')} ${fD(dayOf(new Date().toISOString()))}.</div>`;
+  h += `<div class="foot">${x(`Generat la ${fD(dayOf(new Date().toISOString()))}.`, `Generated on ${fD(dayOf(new Date().toISOString()))}.`)}</div>`;
   return h;
 }
 
 /** Tipărește într-un cadru ascuns (nu schimbă pagina). */
-export function printHtml(title: string, inner: string, lang: 'ro' | 'en' = 'ro') {
+export function printHtml(title: string, inner: string) {
   const fr = document.createElement('iframe');
   fr.setAttribute('aria-hidden', 'true');
   fr.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0';
@@ -135,7 +137,7 @@ export function printHtml(title: string, inner: string, lang: 'ro' | 'en' = 'ro'
   const doc = fr.contentDocument;
   if (!doc) return;
   doc.open();
-  doc.write(`<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><title>${esc(title)}</title><style>${CSS}</style></head><body><div class="pr">${inner}</div></body></html>`);
+  doc.write(`<!doctype html><html lang="ro"><head><meta charset="utf-8"><title>${esc(title)}</title><style>${CSS}</style></head><body><div class="pr">${inner}</div></body></html>`);
   doc.close();
   setTimeout(() => {
     try { fr.contentWindow?.focus(); fr.contentWindow?.print(); } catch { /* fără tipărire în această vizualizare */ }

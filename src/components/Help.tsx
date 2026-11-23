@@ -44,7 +44,7 @@ function HelpRo() {
         <li><b>Android / Chrome:</b> meniul ⋮ → <i>Instalează aplicația</i> (sau <i>Adaugă pe ecranul de pornire</i>).</li>
         <li><b>iPhone / Safari:</b> butonul Partajare → <i>Adaugă pe ecranul principal</i>.</li>
         <li><b>Calculator (Chrome / Edge):</b> pictograma de instalare din bara de adrese.</li>
-        <li><b>Versiunea aplicației</b> apare sus, lângă numele Vademecum MFR (de exemplu <i>v4.8</i>). Pe calculator, ținând cursorul deasupra ei, vedeți și data build-ului. Aceeași informație este jos, pe pagina de login, în Setări și aici.</li>
+        <li><b>Versiunea aplicației</b> apare sus, lângă numele Vademecum MFR (de exemplu <i>v4.9</i>). Pe calculator, ținând cursorul deasupra ei, vedeți și data build-ului. Aceeași informație este jos, pe pagina de login, în Setări și aici.</li>
         <li><b>Actualizare:</b> după o lansare nouă, dacă nu vedeți numărul nou de versiune, închideți complet aplicația (o scoateți din aplicațiile deschise) și deschideți-o din nou.</li>
       </ul>
 
@@ -88,6 +88,9 @@ function HelpRo() {
         <li>Alegeți procedura (durata se completează automat și poate fi schimbată), data, ora și aparatul sau sala. Medicul curant și medicul primitor sunt opționale.</li>
         <li>Numele, diagnosticul și notele sunt <b>opționale</b>. Completați-le doar dacă este necesar.</li>
         <li>Dacă aparatul nu mai are locuri libere, un medic este deja ocupat sau pacientul are altă procedură în acel interval, apare un mesaj roșu și programarea nu poate fi salvată până nu schimbați ora, aparatul sau medicul. Verificarea se face și în baza de date, deci două persoane nu pot rezerva același loc în același timp.</li>
+        <li><b>Propune prima oră liberă:</b> butonul de sub oră caută, în ziua aleasă, prima oră la care sunt libere aparatul, medicul și pacientul și o completează. O puteți modifica oricând.</li>
+        <li><b>Suprapunere:</b> dacă tot trebuie să programați peste altceva, bifați <b>Salvează oricum, cu suprapunere</b>. Programarea se salvează și apare cu altă culoare (hașurat portocaliu și contur punctat), ca să fie ușor de recunoscut. Fără această bifare, aplicația nu permite suprapunerea.</li>
+        <li><b>Mai multe ședințe deodată:</b> dacă ora aleasă este ocupată într-o zi, aplicația poate alege singură cea mai apropiată oră liberă din ziua respectivă (bifa este pusă implicit) și vă spune la final care ședințe au fost mutate sau programate cu suprapunere.</li>
       </ol>
 
       <h2>7. Deschidere, status, modificare, anulare</h2>
@@ -163,7 +166,7 @@ function HelpRo() {
 
       <h2>16. Tipărire și export</h2>
       <ul>
-        <li>În fișa pacientului: <b>Fișă de tratament</b> (planul și evidența ședințelor, cu loc de semnătură) și <b>Orar</b> (ora, procedura și locul). Se tipăresc în limba aleasă în Setări.</li>
+        <li>În fișa pacientului: <b>Fișă de tratament</b> (planul și evidența ședințelor, cu loc de semnătură) și <b>Orar</b> (ora, procedura și locul). Se tipăresc întotdeauna în română. În Setări, la Preferințe personale, bifa <b>Tipărituri: adaugă și traducerea în engleză</b> pune sub fiecare text în română traducerea, între paranteze, în italic și mai mic.</li>
         <li><b>Fișă format spital (beta):</b> fișa de tratament în formatul hârtiei din spital, cu câte un bloc pe procedură. Data, ora și sala se completează singure din programările făcute (care țin deja cont de sală, medic și calendar); executantul, parametrii și observațiile se scriu de mână. Se poate opri din Setări, la Preferințe personale.</li>
         <li>În Căutare: <b>Exportă CSV</b>, fără nume sau diagnostic.</li>
       </ul>
@@ -197,7 +200,7 @@ function HelpEn() {
         <li><b>Android / Chrome:</b> menu ⋮ → <i>Install app</i> (or <i>Add to Home screen</i>).</li>
         <li><b>iPhone / Safari:</b> Share button → <i>Add to Home Screen</i>.</li>
         <li><b>Computer (Chrome / Edge):</b> the install icon in the address bar.</li>
-        <li><b>The app version</b> is shown at the top, next to the Vademecum MFR name (for example <i>v4.8</i>). On a computer, hover over it to see the build date too. The same information is at the bottom of the login page, in Settings and here.</li>
+        <li><b>The app version</b> is shown at the top, next to the Vademecum MFR name (for example <i>v4.9</i>). On a computer, hover over it to see the build date too. The same information is at the bottom of the login page, in Settings and here.</li>
         <li><b>Updating:</b> after a new release, if you do not see the new version number, close the app completely (remove it from your open apps) and open it again.</li>
       </ul>
 
@@ -241,6 +244,9 @@ function HelpEn() {
         <li>Pick the procedure (the duration fills in automatically and can be changed), date, time and the device or room. The attending and receiving doctors are optional.</li>
         <li>Name, diagnosis and notes are <b>optional</b>. Fill them in only when needed.</li>
         <li>If the device has no free place, a doctor is already booked or the patient has another procedure in that interval, a red message appears and the appointment cannot be saved until you change the time, device or doctor. The check is also made in the database, so two people can never book the same slot at once.</li>
+        <li><b>Suggest first free time:</b> the button under the time looks, in the chosen day, for the first time when the device, the doctor and the patient are free and fills it in. You can change it any time.</li>
+        <li><b>Overlap:</b> if you still have to book over something else, tick <b>Save anyway, with overlap</b>. The appointment is saved and shows in a different colour (orange hatching and a dashed outline), so it is easy to spot. Without this tick the app does not allow overlap.</li>
+        <li><b>Several sessions at once:</b> if the chosen time is taken on a day, the app can pick the nearest free time that day by itself (ticked by default) and tells you at the end which sessions were moved or booked with overlap.</li>
       </ol>
 
       <h2>7. Opening, status, changing, cancelling</h2>
@@ -316,7 +322,7 @@ function HelpEn() {
 
       <h2>16. Printing and export</h2>
       <ul>
-        <li>In the patient record: <b>Treatment sheet</b> (plan and session log, with a signature line) and <b>Timetable</b> (time, procedure and place). They print in the language chosen in Settings.</li>
+        <li>In the patient record: <b>Treatment sheet</b> (plan and session log, with a signature line) and <b>Timetable</b> (time, procedure and place). They always print in Romanian. In Settings, under Personal preferences, the <b>Printouts: also add the English translation</b> tick puts the translation under each Romanian text, in brackets, in italics and smaller.</li>
         <li><b>Hospital-format sheet (beta):</b> the treatment sheet in the layout of the hospital's paper form, one block per procedure. Date, time and room are filled in from the bookings already made (which already respect the room, the doctor and the calendar); the performer, parameters and notes are written by hand. It can be switched off in Settings, under Personal preferences.</li>
         <li>In Search: <b>Export CSV</b>, without names or diagnosis.</li>
       </ul>

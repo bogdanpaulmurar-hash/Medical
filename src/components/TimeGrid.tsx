@@ -160,7 +160,7 @@ export function TimeGrid({ cols, describe, showRoom, onSlot, onOpen }: Props) {
                 <button
                   key={a.id}
                   type="button"
-                  className={`tg-block status-${a.status}${compact ? ' compact' : ''}`}
+                  className={`tg-block status-${a.status}${a.overlap_ok ? ' overlap' : ''}${compact ? ' compact' : ''}`}
                   style={{
                     top: rem(s),
                     height: `${heightRem}rem`,

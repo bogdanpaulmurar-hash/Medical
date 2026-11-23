@@ -476,7 +476,7 @@ export class DemoApi implements Api {
     ) {
       throw new ApiError('not_in_plan', 'not in plan');
     }
-    const conflicts = findConflicts(input, this.db.appointments, id, this.db.rooms);
+    const conflicts = input.overlap_ok ? [] : findConflicts(input, this.db.appointments, id, this.db.rooms);
     if (conflicts.length) {
       const k = conflicts[0].kind;
       throw new ApiError(
