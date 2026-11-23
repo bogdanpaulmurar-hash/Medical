@@ -21,6 +21,7 @@ export interface Prefs {
   lang: Lang;
   theme: Theme;
   fontScale: number; // 0.85 – 1.5
+  betaSheet: boolean; // fișa în formatul spitalului (beta)
 }
 
 const PREFS_KEY = 'medsched-prefs' + NS;
@@ -29,6 +30,7 @@ function loadPrefs(): Prefs {
     lang: navigator.language?.toLowerCase().startsWith('ro') ? 'ro' : 'en',
     theme: 'system',
     fontScale: 1,
+    betaSheet: true,
   };
   try {
     const raw = localStorage.getItem(PREFS_KEY);
