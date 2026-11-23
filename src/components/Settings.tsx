@@ -77,6 +77,11 @@ function Personal() {
           />
         </label>
       </div>
+      <label className="inline">
+        <input type="checkbox" checked={prefs.betaSheet} onChange={(e) => setPrefs({ betaSheet: e.target.checked })} />
+        {t('betaSheet' as TKey)}
+      </label>
+      <p className="muted small">{t('betaSheetHint' as TKey)}</p>
       {api.mode === 'supabase' && (
         <details>
           <summary>{t('pwChange' as TKey)}</summary>

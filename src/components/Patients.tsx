@@ -1,4 +1,4 @@
-import { printHtml, sheetHtml, timetableHtml, type PlanPrintData } from '../printPlan';
+import { printHtml, sheetHtml, timetableHtml, hospitalSheetHtml, type PlanPrintData } from '../printPlan';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ApiError } from '../data/api';
 import { api, fmtTime, locale, toDateInput, useApp } from '../state';
@@ -249,6 +249,9 @@ export function PatientsPage() {
                 <h2>{t('bookedHours')}</h2>
                 <div className="row">
                   <button className="secondary small" onClick={() => printHtml(`${prefs.lang === 'en' ? 'Treatment sheet' : 'Fișă de tratament'} ${selected.code}`, sheetHtml(pd()), prefs.lang)}>🖨 {t('printSheet')}</button>
+                  {prefs.betaSheet && (
+                    <button className="secondary small" onClick={() => printHtml(`${prefs.lang === 'en' ? 'Hospital sheet' : 'Fișă spital'} ${selected.code}`, hospitalSheetHtml(pd()), prefs.lang)}>🖨 {t('printHospitalSheet' as TKey)}</button>
+                  )}
                   <button className="secondary small" onClick={() => printHtml(`${prefs.lang === 'en' ? 'Timetable' : 'Orar'} ${selected.code}`, timetableHtml(pd()), prefs.lang)}>🖨 {t('printTimetable')}</button>
                 </div>
                 {upcoming.length === 0 && <p className="muted">{t('noBooked')}</p>}
