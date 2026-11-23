@@ -111,6 +111,7 @@ export interface Appointment {
   attending_id: string | null;
   receiving_id: string | null;
   status: Status;
+  overlap_ok?: boolean; // suprapunere permisă de persoana care programează
   created_by: string | null;
   updated_by: string | null;
   created_at: string;

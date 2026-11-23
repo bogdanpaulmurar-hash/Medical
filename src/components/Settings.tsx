@@ -78,6 +78,11 @@ function Personal() {
         </label>
       </div>
       <label className="inline">
+        <input type="checkbox" checked={prefs.printEn} onChange={(e) => setPrefs({ printEn: e.target.checked })} />
+        {t('printEn' as TKey)}
+      </label>
+      <p className="muted small">{t('printEnHint' as TKey)}</p>
+      <label className="inline">
         <input type="checkbox" checked={prefs.betaSheet} onChange={(e) => setPrefs({ betaSheet: e.target.checked })} />
         {t('betaSheet' as TKey)}
       </label>

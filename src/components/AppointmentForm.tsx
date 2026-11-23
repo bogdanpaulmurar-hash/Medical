@@ -21,6 +21,9 @@ interface Props {
   onSaved: (saved: Appointment) => void;
 }
 
+const SEARCH_FROM = 8 * 60;
+const SEARCH_TO = 16 * 60;
+
 export function AppointmentForm({ appointment, defaultDate, defaults, onClose, onSaved }: Props) {
   const { t, prefs, procedures, rooms, cabinets, profiles, patients, plan, me } = useApp();
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -68,6 +71,8 @@ export function AppointmentForm({ appointment, defaultDate, defaults, onClose, o
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [allowOverlap, setAllowOverlap] = useState(!!appointment?.overlap_ok);
+  const [autoShift, setAutoShift] = useState(true);
 
   useEffect(() => {
     dialogRef.current?.showModal();
@@ -129,12 +134,53 @@ export function AppointmentForm({ appointment, defaultDate, defaults, onClose, o
     attending_id: f.attending_id || null,
     receiving_id: f.receiving_id || null,
     status: f.status,
+    overlap_ok: false,
   };
 
   const conflicts = useMemo(
     () => (input.starts_at && input.room_id ? findConflicts(input, dayItems, appointment?.id ?? null, rooms) : []),
     [dayItems, rooms, input.starts_at, input.ends_at, input.room_id, input.attending_id, input.receiving_id, input.patient_id, input.status],
   );
+
+  input.overlap_ok = conflicts.length > 0 && allowOverlap;
+
+  /** Cea mai apropiată oră liberă (aparat, medic, pacient) într-o zi; `earliest` = prima din zi. */
+  function freeTimeFor(day: Date, known: Appointment[], desired: Date, earliest: boolean, selfId: string | null) {
+    const dur = Number(f.duration || 0);
+    if (!dur) return null;
+    const want = desired.getHours() * 60 + desired.getMinutes();
+    const mins: number[] = [];
+    for (let m = SEARCH_FROM; m + dur <= SEARCH_TO; m += 5) mins.push(m);
+    if (!earliest) mins.sort((a, b) => Math.abs(a - want) - Math.abs(b - want));
+    const pool = [f.room_id, ...procRoomIds.filter((id) => id !== f.room_id)].filter(Boolean);
+    for (const m of mins) {
+      const s0 = new Date(day);
+      s0.setHours(Math.floor(m / 60), m % 60, 0, 0);
+      const e0 = new Date(s0.getTime() + dur * 60000);
+      for (const roomId of pool) {
+        const room = rooms.find((r) => r.id === roomId);
+        if (!room || !room.active) continue;
+        if (roomId !== f.room_id && room.audience !== 'all' && patient && room.audience !== patient.kind) continue;
+        const cand = { ...input, overlap_ok: false, room_id: roomId, starts_at: s0.toISOString(), ends_at: e0.toISOString() };
+        if (findConflicts(cand, known, selfId, rooms).length === 0) return { start: s0, roomId };
+      }
+    }
+    return null;
+  }
+
+  function suggestTime() {
+    setError(null);
+    setInfo(null);
+    const day = startOfDay(start);
+    const hit = freeTimeFor(day, dayItems, start, true, appointment?.id ?? null);
+    if (!hit) {
+      setError(t('noFreeTime' as TKey));
+      return;
+    }
+    setRoomTouched(false);
+    setF((o) => ({ ...o, time: toTimeInput(hit.start), room_id: hit.roomId }));
+    setAllowOverlap(false);
+  }
 
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((o) => ({ ...o, [k]: v }));
 
@@ -157,7 +203,7 @@ export function AppointmentForm({ appointment, defaultDate, defaults, onClose, o
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (conflicts.length) return;
+    if (conflicts.length && !allowOverlap) return;
     setBusy(true);
     setError(null);
     setInfo(null);
@@ -186,6 +232,8 @@ export function AppointmentForm({ appointment, defaultDate, defaults, onClose, o
     const known = await api.listAppointments(first.toISOString(), last.toISOString());
     const made: Appointment[] = [];
     const skipped: string[] = [];
+    const shifted: string[] = [];
+    const overlapped: string[] = [];
     for (const d of dates) {
       const s = new Date(d);
       const e = new Date(s.getTime() + Number(f.duration) * 60000);
@@ -195,23 +243,39 @@ export function AppointmentForm({ appointment, defaultDate, defaults, onClose, o
         const room = rooms.find((r) => r.id === roomId);
         if (!room || !room.active) continue;
         if (roomId !== f.room_id && room.audience !== 'all' && patient && room.audience !== patient.kind) continue;
-        const cand = { ...input, room_id: roomId, starts_at: s.toISOString(), ends_at: e.toISOString() };
+        const cand = { ...input, overlap_ok: false, room_id: roomId, starts_at: s.toISOString(), ends_at: e.toISOString() };
         if (findConflicts(cand, [...known, ...made], null, rooms).length === 0) {
           chosen = cand;
           break;
         }
       }
+      const label = s.toLocaleDateString(prefs.lang === 'ro' ? 'ro-RO' : 'en-GB', { day: 'numeric', month: 'short' });
+      if (!chosen && autoShift) {
+        const hit = freeTimeFor(startOfDay(s), [...known, ...made], s, false, null);
+        if (hit) {
+          chosen = { ...input, overlap_ok: false, room_id: hit.roomId, starts_at: hit.start.toISOString(), ends_at: new Date(hit.start.getTime() + Number(f.duration) * 60000).toISOString() };
+          shifted.push(`${label} ${toTimeInput(hit.start)}`);
+        }
+      }
+      if (!chosen && allowOverlap) {
+        chosen = { ...input, overlap_ok: true, room_id: f.room_id, starts_at: s.toISOString(), ends_at: e.toISOString() };
+        overlapped.push(label);
+      }
       if (!chosen) {
-        skipped.push(s.toLocaleDateString(prefs.lang === 'ro' ? 'ro-RO' : 'en-GB', { day: 'numeric', month: 'short' }));
+        skipped.push(label);
         continue;
       }
       made.push(await api.saveAppointment(null, chosen));
     }
-    if (skipped.length === 0 && made.length > 0) {
+    if (skipped.length === 0 && shifted.length === 0 && overlapped.length === 0 && made.length > 0) {
       onSaved(made[0]);
       return;
     }
-    setInfo(`${t('seriesDone')}: ${made.length}/${dates.length}`);
+    setInfo(
+      `${t('seriesDone')}: ${made.length}/${dates.length}` +
+        (shifted.length ? `. ${t('seriesShifted' as TKey)}: ${shifted.join(', ')}` : '') +
+        (overlapped.length ? `. ${t('seriesOverlapped' as TKey)}: ${overlapped.join(', ')}` : ''),
+    );
     if (skipped.length) setError(`${t('seriesSkipped')}: ${skipped.join(', ')}`);
   }
 
@@ -321,6 +385,12 @@ export function AppointmentForm({ appointment, defaultDate, defaults, onClose, o
             {t('end')}: {fmtTime(end.toISOString(), prefs.lang)}
           </p>
         )}
+        <div className="row">
+          <button type="button" className="secondary small" onClick={suggestTime}>
+            {t('suggestTime' as TKey)}
+          </button>
+          <span className="muted small">{t('suggestTimeHint' as TKey)}</span>
+        </div>
 
         {showCount && (
           <label>
@@ -432,6 +502,22 @@ export function AppointmentForm({ appointment, defaultDate, defaults, onClose, o
                 </li>
               ))}
             </ul>
+            <label className="inline">
+              <input type="checkbox" checked={allowOverlap} onChange={(e) => setAllowOverlap(e.target.checked)} />
+              {t('allowOverlap' as TKey)}
+            </label>
+          </div>
+        )}
+        {showCount && count > 1 && (
+          <div className="ov-warn">
+            <label className="inline">
+              <input type="checkbox" checked={autoShift} onChange={(e) => setAutoShift(e.target.checked)} />
+              {t('autoShift' as TKey)}
+            </label>
+            <label className="inline">
+              <input type="checkbox" checked={allowOverlap} onChange={(e) => setAllowOverlap(e.target.checked)} />
+              {t('allowOverlapSeries' as TKey)}
+            </label>
           </div>
         )}
         {info && (
@@ -457,7 +543,7 @@ export function AppointmentForm({ appointment, defaultDate, defaults, onClose, o
             {info ? t('close') : t('cancel')}
           </button>
           {!info && (
-            <button type="submit" className="primary" disabled={busy || conflicts.length > 0 || (!!f.patient_id && !planItem && !(appointment && f.procedure_id === appointment.procedure_id))}>
+            <button type="submit" className="primary" disabled={busy || (conflicts.length > 0 && !allowOverlap) || (!!f.patient_id && !planItem && !(appointment && f.procedure_id === appointment.procedure_id))}>
               {t('save')}
             </button>
           )}

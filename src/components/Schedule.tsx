@@ -374,7 +374,7 @@ export function Schedule() {
                     const rec = a.receiving_id ? lookups.prof.get(a.receiving_id) : null;
                     return (
                       <li key={a.id}>
-                        <button className={`appt status-${a.status}`} style={{ ['--h' as string]: info.hue }} onClick={() => open(a)}>
+                        <button className={`appt status-${a.status}${a.overlap_ok ? ' overlap' : ''}`} style={{ ['--h' as string]: info.hue }} onClick={() => open(a)}>
                           <span className="appt-time">
                             {fmtTime(a.starts_at, prefs.lang)}
                             <span className="muted">–{fmtTime(a.ends_at, prefs.lang)}</span>
@@ -498,7 +498,7 @@ export function Schedule() {
                     return (
                       <div
                         key={a.id}
-                        className={`card-item status-${a.status}`}
+                        className={`card-item status-${a.status}${a.overlap_ok ? ' overlap' : ''}`}
                         style={{ ['--h' as string]: info.hue }}
                         draggable
                         onDragStart={(e) => e.dataTransfer.setData('text/plain', a.id)}
