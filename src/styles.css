@@ -743,3 +743,7 @@ button.sc-card .muted { white-space: normal; }
 .ort-bt{margin:12px 0 4px}
 .ort-diff{background:var(--soft,#f3f6f8);border-radius:6px;padding:4px 10px;margin:6px 0}
 .ort-st{font-size:.8rem;border:1px solid var(--line,#d8dee4);border-radius:999px;padding:1px 8px;white-space:nowrap}
+/* Programare cu suprapunere permisă */
+.overlap{background-image:repeating-linear-gradient(135deg,rgba(217,119,6,.22) 0 6px,transparent 6px 12px)!important;outline:2px dashed #d97706;outline-offset:-2px}
+.ov-warn{border:1px solid #d97706;background:rgba(217,119,6,.12);border-radius:8px;padding:.5rem .75rem}
+.en-sub{display:block;font-style:italic;font-size:.8em;color:inherit;opacity:.85}
