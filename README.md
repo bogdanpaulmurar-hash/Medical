@@ -82,6 +82,12 @@ Without `.env.local` the app starts in **demo mode**: pick a fake user; data sta
 
 ---
 
+## Transfer în conturile clinicii / Handover
+
+Mutarea repo-ului, a proiectului Supabase și a contextului Claude în conturile medicului: [docs/TRANSFER.md](docs/TRANSFER.md) (scripturi în `scripts/transfer/`). Context pentru un proiect Claude nou: [docs/CONTEXT.md](docs/CONTEXT.md).
+
+---
+
 ## Deploy pas cu pas / Step-by-step deployment
 
 ### 1. Supabase (baza de date) / Supabase (database)
