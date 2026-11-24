@@ -40,7 +40,9 @@ Scripturile sunt în [`scripts/transfer/`](../scripts/transfer/). Toate rulează
 4. În organizația Supabase: *Team* → *Invite* → emailul lui Bogdan, rol **Owner** (temporar). Bogdan acceptă.
 5. **Claude**: cont pe claude.ai (plan Pro sau mai mare, ca să aibă proiecte și Claude Code). Detalii în Faza 6.
 
-> De notat pentru transfer.env: numele organizației GitHub (`DST_OWNER`) și slug-ul organizației Supabase (`DST_SUPABASE_ORG_SLUG`, se vede în adresa `supabase.com/dashboard/org/<slug>`).
+> **Numele repo-ului îl alege medicul.** Implicit rămâne `Medical`, dar în transfer.env se poate pune alt nume (`REPO_NAME`, de ex. `vademecum-mfr`); transferul îl redenumește în același pas și adresa site-ului devine `https://<org>.github.io/<nume>/`. Dacă repo-ul se numește exact `<org>.github.io`, site-ul stă direct la `https://<org>.github.io/`. Aplicația merge la orice adresă (folosește căi relative). La rollback, repo-ul revine cu numele vechi.
+
+> De notat pentru transfer.env: numele organizației GitHub (`DST_OWNER`), numele repo-ului dorit (`REPO_NAME`) și slug-ul organizației Supabase (`DST_SUPABASE_ORG_SLUG`, se vede în adresa `supabase.com/dashboard/org/<slug>`).
 
 ### 0.2 🤖 BOGDAN — uneltele, pe calculatorul de pe care se rulează
 
